@@ -4,7 +4,7 @@ public with sharing class GlobalTranzLtlRateRequest {
     // ====== CONFIG ======
     // Base URL must match your Remote Site domain
     private static final String BASE_URL = 'https://dev.gtzintegrate.com/rate/ltl/v2';
-    // private static final String BASE_URL = 'https://api.gtzintegrate.com/rate/ltl/v2';  ==> production
+    // private static final String BASE_URL = 'https://api.gtzintegrate.com/rate/ltl/v2';  ==> production api
     private static final String SUBSCRIPTION_KEY = 'Your-Key';
     private static final String USERNAME = 'Your-Username';
     private static final String PASSWORD = 'Your-Password';
