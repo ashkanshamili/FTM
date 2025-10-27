@@ -1,0 +1,138 @@
+<apex:page standardcontroller="FreightTM__Storage__c" extensions="SageInvoice" tabStyle="FreightTM__Storage__c" lightningStylesheets="true"></apex:page>
+    <style>
+    .customerError { font-weight: bold; list-style: none; }
+    .invoiceError { color: red; font-weight: strong; }
+    .bkg-inv { background-color: #eee; }
+    .products tr { border: solid 1px #efefef; }
+    .container { padding: 0% 5%;}
+    .text { padding: 1%;}
+    </style>
+    <script>
+    function redirectToPreviousPage() {
+        window.history.back();
+    }
+    </script>
+
+    <apex:form >
+        <apex:outputPanel id="allPanel">
+            <apex:pageMessages />
+                <div class="container">
+                        <h2 style="font-size:25px; color: #fa5e62;">Send Invoice to Sage</h2>
+                    <br />
+                      
+                  <!--<span style="text-align: left; vertical-align: top; font-size: 1.3em; font-weight: bold;">Invoice No:&nbsp;<apex:outputField value="{!FreightTM__Storage__c.Name}"/></span><br />
+                  <span style="text-align: left; vertical-align: top; font-size: 1.3em; font-weight: bold;">Job No:&nbsp;<apex:outputField value="{!FreightTM__Storage__c.FreightTM__Load__r.Name}"/></span><br />
+                  -->
+                    
+                        <div class="bkg-inv">
+                            <div class="text">
+                               
+                                <table width="100%">
+                                    <tr>
+                                        <td width="30%">
+                                            <b>Invoice No:</b><br />
+                                            <apex:outputField value="{!FreightTM__Storage__c.Name}"/><br /><br />
+                                            <b>Job No:</b><br />
+                                            <apex:outputField value="{!FreightTM__Storage__c.FreightTM__Load__r.Name}"/><br />
+                                            
+                                            
+                                        </td>
+                                        <td width="30%">
+                                            <b>Customer:</b><br />
+                                            <apex:outputField value="{!FreightTM__Storage__c.Customer_Name__c}" /><br /><br />
+                                            <b>Customer Type:</b><br />
+                                            <apex:outputField value="{!FreightTM__Storage__c.FreightTM__Load__r.Account__r.Type}"/><br /><br />
+                                        </td>
+                                        <td width="20%" style="vertical-align: top;">
+                                            <!--{!MONTH(TODAY())}/{!DAY(TODAY())}/{!YEAR(TODAY())}-->
+                                            <b>Invoice Date:</b><br /><apex:outputField value="{!FreightTM__Storage__c.Date__c}"/><br /><br />
+                                            <b>Invoice Status:</b><br />
+                                            <apex:outputField value="{!FreightTM__Storage__c.Status__c}"/><br /><br />
+                                        </td>
+                                        <td width="20%" style="vertical-align: top;">
+                                            <b>Terms:</b><br /><apex:outputField value="{!FreightTM__Storage__c.Terms__c}"/><br /><br />
+                                            <b>Tracking NO:</b><br /><apex:outputField value="{!FreightTM__Storage__c.Sage_Invoice_Key__c}"/><br /><br />
+                                        </td>
+                                    </tr>
+                                </table>
+                                 <table width="100%">
+                                    <tr>
+                                        <td width="30%" style="vertical-align: top;">
+                                            <b>Amount:</b> <br />
+                                            <apex:outputField value="{!FreightTM__Storage__c.Amount__c}"/>
+                                            
+                                        </td>
+                                        <td width="30%" style="vertical-align: top;">
+                                            <b>Storage Amount:</b> <br />
+                                            <apex:outputField value="{!FreightTM__Storage__c.Storage_Amount__c}"/>
+                                        </td>
+                                        <td width="20%" style="vertical-align: top;">
+                                            <b>Amount (Total):</b><br />
+                                            <apex:outputField value="{!FreightTM__Storage__c.Total_Amount__c}"/>
+                                        </td>
+                                        <td width="20%" style="vertical-align: top;">
+                                            <b>Status:</b><br />
+                                            <apex:outputField value="{!FreightTM__Storage__c.Status__c}"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div></div>
+                    <br /><br />
+                    <span style="text-align: left; vertical-align: top; font-size: 1.3em; font-weight: bold;">Items</span>    
+                    <div class="bkg-inv">
+                    <div class="text">
+                        <table width="100%">
+                            <tr>
+                                <td width="10%"><b>Name:</b>&nbsp;</td>
+                                <td width="10%"><b>Unit Price:</b>&nbsp;</td>
+                                <td width="10%"><b>Number of Units:</b>&nbsp;</td>
+                                <td width="10%"><b>Amount:</b>&nbsp;</td>
+                                <td width="10%"><b>Location Id:</b>&nbsp;</td>
+                                <td width="10%"><b>Taxable:</b>&nbsp;</td>
+                                <td width="10%"><b>Item type:</b>&nbsp;</td>
+                                <!--<td width="10%"><b>RevRec Date:</b>&nbsp;</td>-->
+                            </tr>
+                            <apex:repeat var="e" value="{!FreightTM__Storage__c.FreightTM__Storage_Billings__r}">
+                                <tr>
+                                    <td align="left"><apex:outputText value="{!e.Type__c}"/></td>
+                                    <td align="left"><apex:outputText value="{!e.Unit_Price__c}"/></td>
+                                    <td align="left"><apex:outputText value="{!e.Number_of_Units__c}"/></td>
+                                    <td align="left"><apex:outputText value="{!e.Amount__c}"/></td>
+                                    <td align="left"><apex:outputText value="{!e.Location_IDs__c}"/></td>
+                                    <td align="left"><apex:outputText value="{!e.Taxable__c}"/></td>
+                                    <td align="left"><apex:outputText value="{!e.Sage_Item_Type__c}"/></td>
+                                    <!--<td align="left"><apex:outputField value="{!e.RevRec_Start_Date__c}"/></td>-->
+                                </tr>
+                            </apex:repeat>
+                        </table></div></div>
+                   <!-- <div class="bkg-inv">
+                    <div class="text">
+                        <table width="100%">
+                            <tr>
+                                <td width="20%"><b>Item ID:</b>&nbsp;</td>
+                                <td width="20%"><b>Amount:</b>&nbsp;</td>
+                                <td width="20%"><b>Quantity:</b>&nbsp;</td>
+                                <td width="20%"><b>Location ID:</b>&nbsp;</td>
+                                <td width="20%"><b>State:</b>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td align="left"><apex:outputText value="{!FreightTM__Storage__c.Line_Item_ID__c}"/></td>
+                                <td align="left"><apex:outputText value="{!FreightTM__Storage__c.Amount__c}"/></td>
+                                <td align="left"><apex:outputText value="{!FreightTM__Storage__c.Quantity__c}"/></td>
+                                <td align="left"><apex:outputText value="{!FreightTM__Storage__c.Location_Id__c}"/></td>
+                                <td align="left"><apex:outputText value="{!FreightTM__Storage__c.State__c}"/></td>
+                            </tr>
+                        </table></div></div>-->
+                    
+                        <br /><br />
+                        <apex:commandButton value="Back" onclick="redirectToPreviousPage();"/>
+                        <apex:commandButton value="Create Customer" action="{!CreateCustomer}" /><!---->
+                        <apex:commandButton value="Create Invoice/Transaction" action="{!CreateInvoice}" />
+                        <!--<apex:commandButton value="Create Item"  action="{!CreateItem}"/>-->
+                        <br/> <br/> <br/> <br/>
+            
+            </div>
+            
+                </apex:outputPanel>
+    </apex:form>
+</apex:page>
