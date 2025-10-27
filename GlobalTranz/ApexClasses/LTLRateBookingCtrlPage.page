@@ -1,0 +1,178 @@
+<apex:page standardcontroller="FreightTM__Lane_Quote__c" extensions="LTLRateBookingCtrl" tabStyle="FreightTM__Lane_Quote__c" lightningStylesheets="true">
+    <style>
+        .customerError { font-weight: bold; list-style: none; }
+        .invoiceError { color: red; font-weight: strong; }
+        .bkg-inv { background-color: #eee; }
+        .products tr { border: solid 1px #efefef; }
+        .container { padding: 0% 5%;}
+        .text { padding: 1%;}
+    </style>
+    <script>
+    function redirectToPreviousPage() {
+        window.history.back();
+    }
+    </script>
+    
+    <apex:pageMessages id="pageMsgs"/><br/>
+    
+    <apex:form >
+        <apex:outputPanel id="allPanel">
+            <div class="container">
+                <h2 style="text-align: center;">Get Rates/Transite Day/Book Shipment </h2>
+                <hr/>
+                <table width="100%">
+                    <tr>
+                        <td>
+                            <span style="text-align: left; vertical-align: top; font-size: 1.1em; font-weight: bold;"><b>Load No:</b><br /><apex:outputField value="{!FreightTM__Lane_Quote__c.Name}"/></span><br />
+                        </td>
+                        <td>
+                            <span style="text-align: center; vertical-align: top; font-size: 1.1em; font-weight: bold;"><b>Customer:</b><br /><apex:outputField value="{!FreightTM__Lane_Quote__c.FreightTM__Customer__r.Name}"/></span><br />
+                        </td>
+                        <td>
+                            <span style="text-align: center; vertical-align: top; font-size: 1.1em; font-weight: bold;"><b>Customer Id:</b><br /><apex:outputField value="{!FreightTM__Lane_Quote__c.Customer_Id__c}"/></span><br />
+                        </td>
+                        <td>
+                            <span style="text-align: center; vertical-align: top; font-size: 1.1em; font-weight: bold;"><b>Contact:</b><br /><apex:outputField value="{!FreightTM__Lane_Quote__c.Contact_Name__c}"/></span><br />
+                        </td>
+                        <td style="text-align: right; padding-right:5%;">
+                            <span style="text-align: left; vertical-align: top; font-size: 1.1em; font-weight: bold;"><b>Date:</b><br />{!MONTH(TODAY())}/{!DAY(TODAY())}/{!YEAR(TODAY())}</span><br />
+                        </td>
+                    </tr>
+                </table>
+                <hr/>
+                <br />
+                <apex:commandButton onclick="redirectToPreviousPage();" value="Back" />
+                <!--<apex:commandButton immediate="false" value="Get Rate" rerender="responsePanel,responsePanelII"/>-->
+                <apex:commandButton action="{!getRates}"
+                            value="Get Rate"
+                            rerender="responsePanel,responsePanelII,pageMsgs"/>
+                <br />
+                <hr/>
+                <!-- ===== Load Details ===== -->
+                <div class="bkg-inv">
+                    <div class="text">
+                        <table width="100%">
+                            <tr>
+                                
+                                <td width="25%">
+                                    <b>Pickup Address:</b><br />
+                                    <apex:outputText value="{!FreightTM__Lane_Quote__c.FreightTM__Pickup_Facility__r.Name}" /><br />
+                                    <apex:outputField value="{!FreightTM__Lane_Quote__c.FreightTM__Pickup_Street__c}"/><br />
+                                    <apex:outputPanel ><apex:outputText value="{!FreightTM__Lane_Quote__c.FreightTM__Pickup_City__c}"/>,&nbsp; 
+                                        <apex:outputText value=" {!FreightTM__Lane_Quote__c.FreightTM__Pickup_State__c}"/>&nbsp; 
+                                        <apex:outputText value=" {!FreightTM__Lane_Quote__c.FreightTM__Pickup_Zip_Code__c}"/></apex:outputPanel><br />
+                                    <apex:outputField value="{!FreightTM__Lane_Quote__c.FreightTM__Pickup_Country__c}"/><br />
+                                </td>
+                                <td width="25%">
+                                    <b>Delivery Address:</b><br />
+                                    <apex:outputText value="{!FreightTM__Lane_Quote__c.FreightTM__Delivery_Facility__r.Name}" /><br />
+                                    <apex:outputField value="{!FreightTM__Lane_Quote__c.FreightTM__Delivery_Street__c}"/><br />
+                                    <apex:outputPanel ><apex:outputText value="{!FreightTM__Lane_Quote__c.FreightTM__Delivery_City__c}"/>,&nbsp; 
+                                        <apex:outputText value=" {!FreightTM__Lane_Quote__c.FreightTM__Delivery_State__c}"/> &nbsp;
+                                        <apex:outputText value=" {!FreightTM__Lane_Quote__c.FreightTM__Delivery_Zip_Code__c}"/>
+                                    </apex:outputPanel><br />
+                                    <apex:outputField value="{!FreightTM__Lane_Quote__c.FreightTM__Delivery_Country__c}"/><br /> 
+                                </td>
+                                <td width="25%">
+                                    <b>No of Pallets:</b>&nbsp;<apex:outputField value="{!FreightTM__Lane_Quote__c.Number_of_Pallets__c}"/><br /> 
+                                    <b>No of Pieces:</b>&nbsp;<apex:outputField value="{!FreightTM__Lane_Quote__c.Number_of_Pieces__c}"/><br /> 
+                                    <b>Hazmat:</b>&nbsp;<apex:outputText value="{!IF(FreightTM__Lane_Quote__c.Hazmat__c, 'Yes', 'No')}"/><br />
+                                    <b>Hazmat Class:</b>&nbsp;<apex:outputField value="{!FreightTM__Lane_Quote__c.Hazmat_Class__c}"/><br />
+                                    <b>Stackable</b>&nbsp;<apex:outputText value="{!IF(FreightTM__Lane_Quote__c.Stackable__c, 'Yes', 'No')}"/><br /> 
+                                    
+                                </td>
+                                <td width="25%">
+                                    <b>Length:</b>&nbsp;<apex:outputField value="{!FreightTM__Lane_Quote__c.Length__c}"/><br /> 
+                                    <b>Width:</b>&nbsp;<apex:outputField value="{!FreightTM__Lane_Quote__c.Width__c}"/><br /> 
+                                    <b>Height:</b>&nbsp;<apex:outputField value="{!FreightTM__Lane_Quote__c.Height__c}"/><br /> 
+                                    <b>Weight:</b>&nbsp;<apex:outputField value="{!FreightTM__Lane_Quote__c.FreightTM__Weight__c}"/><br /> 
+                                    <b>Freight Class:</b>&nbsp;<apex:outputField value="{!FreightTM__Lane_Quote__c.Class__c}"/><br />
+                                    
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <hr/>
+                <br />
+                
+                <!-- ===== Results ===== -->
+                <div class="row" >
+                    <div class="col">
+                        <apex:outputPanel id="responsePanel">
+                            <!-- show table when we have results -->
+                            <apex:outputPanel rendered="{!NOT(ISBLANK(ratesList))}">
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th><b>Provider</b>&nbsp;&nbsp;</th>
+                                            <th><b>Carrier&nbsp;&nbsp;</b></th>
+                                            <th><b>Amount&nbsp;&nbsp;</b></th>
+                                            <th><b>Transit Days&nbsp;&nbsp;</b></th>
+                                            <th><b>Est. Delivery&nbsp;&nbsp;</b></th>
+                                            <th><b>Quote Id&nbsp;&nbsp;</b></th>
+                                            <th><b>Message&nbsp;&nbsp;</b></th>
+                                            <th><b>Book Shipment&nbsp;&nbsp;</b></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <apex:repeat value="{!ratesList}" var="r">
+                                            <tr>
+                                                <td><apex:outputText value="{!providerName}"/></td>
+                                                <td><apex:outputText value="{!r.CarrierDetail.CarrierName}"/>&nbsp;&nbsp;</td>
+                                                <td>$<apex:outputText value="{!r.LtlAmount}"/>&nbsp;&nbsp;</td>
+                                                <td><apex:outputText value="{!r.LtlServiceDays}"/>&nbsp;&nbsp;</td>
+                                                <td><apex:outputText value="{!r.EstimatedDeliveryDate}"/>&nbsp;&nbsp;</td>
+                                                <td><apex:outputText value="{!r.QuoteId}"/>&nbsp;&nbsp;</td>
+                                                <td><apex:outputText value="{!r.CustomMessage}"/>&nbsp;&nbsp;</td>
+                                                <!-- The button -->
+                                                <td>
+                                                    <apex:commandButton value="Book Shipment"
+                                                                        action="{!bookShipment}"
+                                                                        rerender="pageMsgs,responsePanelII"
+                                                                        status="bookStatus">
+                                                        <!-- pass the row values into controller properties -->
+                                                        <apex:param name="qid" value="{!r.QuoteId}"/>
+                                                        <apex:param name="car" value="{!r.CarrierDetail.CarrierName}"/>
+                                                    </apex:commandButton>
+                                                </td>
+                                            </tr>
+
+                                        </apex:repeat>
+                                    </tbody>
+                                </table>
+                            </apex:outputPanel>
+
+                        </apex:outputPanel>
+                        
+                        
+                    </div>
+                    
+                </div>
+                
+                <br/><br/><br/>
+                <!-- ===== Errors ===== -->
+                <table width="100%" class="products">
+                    
+                       <tr><td style="text-align: center; color: #6D2527; background-color: #FCD4D5;">
+                           <apex:outputPanel id="responsePanelII">
+                               <apex:outputText value="{!errorMsg}" rendered="{!NOT(ISBLANK(errorMsg))}"/>
+                           </apex:outputPanel>
+                       </td></tr> 
+                </table>
+            </div>
+        </apex:outputPanel>
+        
+        <script>
+        function bookShipment(vendorId, quoteNumber) {
+            bookShipmentAction(vendorId, quoteNumber);
+        }
+        
+        </script>
+        <apex:actionFunction name="bookShipmentAction"  rerender="responsePanelI">
+            <apex:param name="CarrierName" value=""/>
+            <apex:param name="quoteID" value=""/>
+        </apex:actionFunction>
+
+    </apex:form>
+</apex:page>
