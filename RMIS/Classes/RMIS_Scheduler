@@ -1,0 +1,5 @@
+global class RMIS_Scheduler implements Schedulable {
+    global void execute(SchedulableContext sc) {
+        System.enqueueJob(new RMIS_Queueable());
+    }
+}

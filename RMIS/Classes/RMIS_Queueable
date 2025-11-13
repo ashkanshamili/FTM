@@ -1,0 +1,20 @@
+public class RMIS_Queueable implements Queueable {
+    
+    public void execute(QueueableContext context) {
+        //CallOutsToRMIS.CalloutToDeltaAPI();
+        //RMIS.CalloutToRMIS();
+        //DeltaAPIRMIS.CalloutToRMIS();
+        if (!Test.isRunningTest()){
+           // DeltaAPIRMIS.CalloutToRMIS();
+           CallOutsToRMIS.CalloutToDeltaAPI();
+            
+        }else {
+            //String mockResponse = '<?xml version="1.0" encoding="UTF-8"?><Root><Header><Result>SUCCESS</Result></Header><CarrierInfo><CompanyName>Test Company</CompanyName><Address1>123 Main St</Address1><City>Anytown</City><St>CA</St><Zip>12345</Zip><Contact>John Doe</Contact><Title>CEO</Title><Phone>123-456-7890</Phone><Email>john@example.com</Email><CorporateContact><Name>Jane Smith</Name><Phone>987-654-3210</Phone><Email>jane@example.com</Email></CorporateContact></CarrierInfo></Root>';
+        String mockResponse = '{"RMISDeltaAPI": {"Header": {"TimeStamp": "2024-04-10T09:01:26.0932612Z","API": "DeltaAPI","APIMode": "FETCH","APIVersion": "1","Result": "SUCCESS"},"FETCH": {"InsdID": ["3660993","2492342","1880660"]}}}';
+         HTTPResponse res = new HTTPResponse();
+            res.setHeader('Content-Type', 'application/json');
+            res.setBody(mockResponse);
+            res.setStatusCode(200);
+    }
+    }
+    }

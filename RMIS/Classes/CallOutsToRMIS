@@ -1,0 +1,482 @@
+global virtual with sharing class CallOutsToRMIS {
+    public Id carrierId { get; set; }
+    public FreightTM__Carrier__c carrier { get; set; }
+    public List<FreightTM__Carrier__c> carriers { get; set; }
+    // Variables to store InsdID and TimeStamp
+    public List<String> insdIDs { get; set; }
+    public DateTime timeStamp { get; set; }
+    
+    // Function to parse date/time string into Salesforce DateTime format
+    private static DateTime parseDateTimeFromString(String dateTimeStr) {
+        String[] parts = dateTimeStr.split(' ');
+        String[] dateParts = parts[0].split('/');
+        String[] timeParts = parts[1].split(':');
+        Integer year = Integer.valueOf(dateParts[2]);
+        Integer month = Integer.valueOf(dateParts[0]);
+        Integer day = Integer.valueOf(dateParts[1]);
+        Integer hour = Integer.valueOf(timeParts[0]);
+        Integer minute = Integer.valueOf(timeParts[1]);
+        Integer second = Integer.valueOf(timeParts[2]);
+        
+        return DateTime.newInstance(year, month, day, hour, minute, second);
+    }
+    
+    
+    
+    @future(callout=true)
+    public static void CalloutToDeltaAPI() {
+        String endpoint = 'https://api.rmissecure.com/_c/std/api/DeltaAPI.aspx';
+        String requestBody = '{ "clientID": "8021", "clientPassword": "-OzOLRLSe2AXvSzz", "apiMode": "FETCH", "maxRecs":"50"}';
+        // Create HTTP request
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint(endpoint);
+        request.setMethod('POST');
+        request.setHeader('Content-Type', 'application/json');
+        request.setHeader('Accept', '*/*');
+        request.setHeader('Accept-Encoding', 'gzip, deflate, br');
+        request.setTimeout(60000);
+        request.setBody(requestBody);
+        system.debug(requestBody);
+        // Create HTTP object
+        Http http = new Http();
+        HttpResponse response = http.send(request);
+        System.debug(response.getBody());
+        System.debug(response.getStatusCode());
+        
+        // Check if the request was successful
+    if (response.getStatusCode() == 200) {
+        // Parse the JSON response
+        Map<String, Object> responseData = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
+        // Access the timestamp value
+        String timestampStr = (String) ((Map<String, Object>) ((Map<String, Object>) responseData.get('RMISDeltaAPI')).get('Header')).get('TimeStamp');
+        Datetime timestamp = Datetime.valueOf(timestampStr.replace('T', ' ').replace('.1Z', ''));
+        // Access the nested structure
+        Map<String, Object> deltaAPI = (Map<String, Object>) responseData.get('RMISDeltaAPI');
+        
+        // Check if 'FETCH' key exists in deltaAPI and if it's not null
+        if (deltaAPI.containsKey('FETCH') && deltaAPI.get('FETCH') instanceof Map<String, Object>) {
+            // Cast 'FETCH' value to a map
+            Map<String, Object> fetch = (Map<String, Object>) deltaAPI.get('FETCH');
+            
+            // Check if InsdID exists in the response and if it's not null
+            if (fetch.containsKey('InsdID') && fetch.get('InsdID') != null) {
+                // Check if InsdID is actually an array
+                if (fetch.get('InsdID') instanceof List<Object>) {
+                    List<Object> insdIDsList = (List<Object>) fetch.get('InsdID');
+                    List<String> insdIDs = new List<String>();
+                    for (Object id : insdIDsList) {
+                        insdIDs.add(String.valueOf(id));
+                    }
+                    
+                    // Call the callback method to handle the InsdID values
+                    updateClearRMIScarriers(insdIDs);
+                } else {
+                    // Handle the scenario where InsdID is not an array
+                    System.debug('InsdID is not an array');
+                }
+            } else {
+                // Handle the scenario where InsdID is null or not present in the response
+                System.debug('InsdID is null or not present in the response');
+            }
+        } else {
+            // Handle the scenario where 'FETCH' key is null or not present in deltaAPI
+            System.debug('FETCH key is null or not present in deltaAPI');
+        }
+    } else {
+        // Handle non-200 response status
+        System.debug('HTTP Error: ' + response.getStatusCode() + ' ' + response.getStatus());
+    }
+    } 
+    public static void updateClearRMIScarriers(List<String> insdIDs) {
+        List<FreightTM__Carrier__c> carriersToUpsert = new List<FreightTM__Carrier__c>();
+        // Define variables for clearing insureds
+        List<Map<String, Object>> clearInsuredsList = new List<Map<String, Object>>();
+        
+        for (String insdID : insdIDs) {
+            // Define variables outside of the if block
+            String companyName = '';
+            String mcNumber = '';
+            String RMISCarrierID = '';
+            String DOTNumber = '';
+            String Address1 = '';
+            String City = '';
+            String St = '';
+            String Zip = '';
+            String Contact = '';
+            String Title = '';
+            String Phone = '';
+            String Email = '';
+            String Payto = '';
+            String PaytoAddress = '';
+            String PaytoCity = '';
+            String PaytoSt = '';
+            String PaytoZip = '';
+            String PayToEmail = '';
+            String attachDate = '';
+            String CORPORATEName = '';
+            String CORPORATEPhone = '';
+            String CORPORATEEmail = '';
+            String DISPATCHName = '';
+            String DISPATCHPhone = '';
+            String DISPATCHEmail = '';
+            String LastUpdateDateTime = '';
+            String coverageDescriptionE = '';
+            String coverageDescription = '';
+            String autoLimitAmount = '';
+            String cargoLimitAmount = '';
+            String Underwriter = '';
+            String LiabilityExpirationDate = '';
+            String LiabilityLimitAmount = '';
+            String ExpirationDate = '';
+            String Producer = '';
+            String ProducerPhone ='';
+            String ProducerFax ='';
+            String SCAC = '';
+            String PayeeType = '';
+            String taxIdValue = '';
+            String W9IdNode = '';            
+            // Construct the request URL
+            String requestURL = 'https://api.rmissecure.com/_c/std/api/ExpandedCarrierAPI.aspx?clientID=8021&pwd=-OzOLRLSe2AXvSzz&version=13&QueryType=InsdID&QueryID=' + insdID;
+            
+            // Make the HTTP request
+            HttpRequest request = new HttpRequest();
+            request.setEndpoint(requestURL);
+            request.setMethod('POST');
+            request.setHeader('Accept', '*/*');
+            request.setHeader('Accept-Encoding', 'gzip, deflate, br');
+            request.setHeader('Content-Length', '0');
+            request.setTimeout(60000);
+            
+            // Create a new Http object
+            Http http = new Http();
+            HttpResponse response = http.send(request);
+            System.debug(response.getBody());
+            System.debug(response.getStatusCode());
+            
+            
+            if (response.getStatusCode() == 200) {
+                // Parse XML response
+                Dom.Document doc = new Dom.Document();
+                doc.load(response.getBody());
+                
+                Dom.XMLNode rootNode = doc.getRootElement();
+                Dom.XMLNode carrierNode = rootNode.getChildElement('Carrier', null);
+                
+                String attachDateStr = carrierNode.getChildElement('ClientsCarrierIDs', null).getChildElement('ClientsCarrierID', null).getAttributeValue('AttachDate', null);
+                if (carrierNode != null) {
+                    //DateTime attachDate = parseDateTimeFromString(attachDateStr);
+                    companyName = carrierNode.getChildElement('CompanyName', null).getText();
+                    mcNumber = carrierNode.getChildElement('MCNumber', null).getText();
+                    RMISCarrierID = carrierNode.getChildElement('RMISCarrierID', null).getText();
+                    DOTNumber = carrierNode.getChildElement('DOTNumber', null).getText();
+                    Address1 = carrierNode.getChildElement('Address1', null).getText();
+                    City = carrierNode.getChildElement('City', null).getText();
+                    St = carrierNode.getChildElement('St', null).getText();
+                    Zip = carrierNode.getChildElement('Zip', null).getText();
+                    Contact = carrierNode.getChildElement('Contact', null).getText();
+                    Title = carrierNode.getChildElement('Title', null).getText();
+                    Phone = carrierNode.getChildElement('Phone', null).getText();
+                    Email = carrierNode.getChildElement('Email', null).getText();
+                    Payto = carrierNode.getChildElement('Payto', null).getText();
+                    PaytoAddress = carrierNode.getChildElement('PaytoAddress', null).getText();
+                    PaytoCity = carrierNode.getChildElement('PaytoCity', null).getText();
+                    PaytoSt = carrierNode.getChildElement('PaytoSt', null).getText();
+                    PaytoZip = carrierNode.getChildElement('PaytoZip', null).getText();
+                    PayToEmail = carrierNode.getChildElement('Email', null).getText();
+                    attachDate = String.valueOf(parseDateTimeFromString(attachDateStr));
+                    // Extract additional information from XML if contact type is CORPORATE
+                    for (Dom.XMLNode contactNode : carrierNode.getChildElement('Contacts', null).getChildren()) {
+                        if (contactNode.getAttributeValue('Type', null) == 'CORPORATE') {
+                            CORPORATEName = contactNode.getChildElement('Name', null).getText();
+                            CORPORATEPhone = contactNode.getChildElement('Phone', null).getText();
+                            CORPORATEEmail = contactNode.getChildElement('Email', null).getText();
+                            break; // Assuming there's only one CORPORATE contact
+                        }
+                    }
+                    // Extract additional information from XML if contact type is DISPATCH
+                    for (Dom.XMLNode contactNode : carrierNode.getChildElement('Contacts', null).getChildren()) {
+                        if (contactNode.getAttributeValue('Type', null) == 'DISPATCH') {
+                            DISPATCHName = contactNode.getChildElement('Name', null).getText();
+                            DISPATCHPhone = contactNode.getChildElement('Phone', null).getText();
+                            DISPATCHEmail = contactNode.getChildElement('Email', null).getText();
+                            break; // Assuming there's only one DISPATCH contact
+                        }
+                    }
+                    
+                    Dom.XMLNode dotNode = rootNode.getChildElement('DOT', null);
+                    if (dotNode != null) {
+                        Dom.XMLNode dotDateNode = dotNode.getChildElement('dot_dateLastUpdated', null);
+                        if (dotDateNode != null) {
+                            String dotDateLastUpdatedStr = dotDateNode.getText();
+                            LastUpdateDateTime = String.valueOf(parseDateTimeFromString(dotDateLastUpdatedStr));
+                            //LastUpdateDateTime = String.valueOf(dotDateLastUpdated);
+                        }
+                    }
+                    Dom.XMLNode coveragesNode = rootNode.getChildElement('Coverages', null);
+                    for (Dom.XMLNode coverageNode : coveragesNode.getChildren()) {
+                        Dom.XMLNode coverageDescriptionNode = coverageNode.getChildElement('CoverageDescription', null);
+                        if (coverageDescriptionNode != null) {
+                            coverageDescription = coverageDescriptionNode.getText();
+                            if (coverageDescription == 'CARGO') {
+                                Underwriter = coverageNode.getChildElement('Underwriter', null).getText();
+                                Producer = coverageNode.getChildElement('Producer', null).getText();
+                                ProducerPhone = coverageNode.getChildElement('ProducerPhone', null).getText();
+                                ProducerFax = coverageNode.getChildElement('ProducerFax', null).getText();
+                                ExpirationDate = coverageNode.getChildElement('ExpirationDate', null).getText();
+                                // Check if the coverage has a LimitDescription of "Cargo Limit"
+                                for (Dom.XMLNode limitNode : coverageNode.getChildren()) {
+                                    if (limitNode.getName() == 'Limit' && limitNode.getChildElement('LimitAmount', null) != null) {
+                                        // Retrieve the LimitAmount when found  
+                                        cargoLimitAmount = limitNode.getChildElement('LimitAmount', null).getText();
+                                        break; // Found cargo limit amount, no need to continue searching
+                                    }
+                                }
+                                
+                                break; // Found cargo coverage, no need to continue searching
+                            }
+                        }  
+                    }
+                    for (Dom.XMLNode coverageNode : coveragesNode.getChildren()) {
+                        Dom.XMLNode coverageDescriptionNode = coverageNode.getChildElement('CoverageDescription', null);
+                        if (coverageDescriptionNode != null) {
+                            coverageDescription = coverageDescriptionNode.getText();
+                            if (coverageDescription == 'AUTO') {
+                                
+                                for (Dom.XMLNode limitNode : coverageNode.getChildren()) {
+                                    if (limitNode.getName() == 'Limit' && limitNode.getChildElement('LimitAmount', null) != null) {
+                                        // Retrieve the LimitAmount when found
+                                        autoLimitAmount = limitNode.getChildElement('LimitAmount', null).getText();
+                                        break; // Found cargo limit amount, no need to continue searching
+                                    }
+                                }
+                                
+                                break; // Found cargo coverage, no need to continue searching
+                            }
+                        }  
+                    }
+                    for (Dom.XMLNode coverageNode : coveragesNode.getChildren()) {
+                        Dom.XMLNode coverageDescriptionENode = coverageNode.getChildElement('CoverageDescription', null);
+                        if (coverageDescriptionENode != null) {
+                            coverageDescriptionE = coverageDescriptionENode.getText();
+                            if (coverageDescriptionE == 'EXCESS LIABILITY') {
+                                //LiabilityEffectiveDate = coverageNode.getChildElement('EffectiveDate', null).getText();
+                                LiabilityExpirationDate = coverageNode.getChildElement('ExpirationDate', null).getText();
+                                // Check if the coverage has a LimitDescription of "Cargo Limit"
+                                for (Dom.XMLNode limitNode : coverageNode.getChildren()) {
+                                    if (limitNode.getName() == 'Limit' && limitNode.getAttributeValue('LimitDescription', null) == 'EXCESS LIABILITY LIMIT') {
+                                        
+                                        // Retrieve the LimitAmount when the LimitDescription is "Cargo Limit"
+                                        LiabilityLimitAmount = limitNode.getChildElement('LimitAmount', null).getText();
+                                        break; // Found cargo limit amount, no need to continue searching
+                                    }
+                                }
+                                
+                                break; // Found cargo coverage, no need to continue searching
+                            }
+                        }  
+                    }
+                    
+                    Dom.XMLNode carrierProfileNode = rootNode.getChildElement('CarrierProfile', null);
+                    if (CarrierProfileNode != null) {
+                        SCAC = carrierProfileNode.getChildElement('SCAC', null).getText(); // Get SCAC value  
+                        PayeeType = carrierProfileNode.getChildElement('PayeeType', null).getText();
+                        
+                    }
+                    Dom.XMLNode w9Node = rootNode.getChildElement('W9', null);
+if (w9Node != null) {
+    Dom.XMLNode taxIdNode = w9Node.getChildElement('TaxID', null);
+    if (taxIdNode != null) {
+         taxIdValue = taxIdNode.getText();
+         W9IdNode = w9Node.getChildElement('W9ID', null).getText();
+        
+        
+    }
+}
+                }else {
+                    // Handle non-200 response status
+                    System.debug('HTTP Error: ' + response.getStatusCode() + ' ' + response.getStatus());
+                }
+                
+                // Construct request endpoint using the InsdID
+                Date today = Date.today();
+                // Query for carriers with non-null RMIS_InsdID__c and RMIS_Timestamp__c
+                List<FreightTM__Carrier__c> carriers = [SELECT Id, Name, RMIS_InsdID__c, RMIS_Timestamp__c
+                                                        FROM FreightTM__Carrier__c
+                                                        WHERE RMIS_InsdID__c != null AND DAY_ONLY(RMIS_Timestamp__c) = :today];
+                //was here clear
+            }
+            
+            // Query existing carrier records
+            List<FreightTM__Carrier__c> existingCarriers = [SELECT Id, RMIS_InsdID__c, RMIS_Timestamp__c FROM 
+                                                            FreightTM__Carrier__c WHERE RMIS_InsdID__c = :insdID LIMIT 1];
+            FreightTM__Carrier__c carrierToUpdate;
+            
+            if (existingCarriers.isEmpty()) {
+                // If no existing carrier found, create a new carrier record
+                carrierToUpdate = new FreightTM__Carrier__c();
+                carrierToUpdate.RMIS_InsdID__c = insdID;
+            } else {
+                // If existing carrier found, update its timestamp
+                carrierToUpdate = existingCarriers[0];
+            }
+            
+            // Update carrier fields
+            carrierToUpdate.Name = companyName;
+            carrierToUpdate.FreightTM__MC_MX_FF_Number__c = mcNumber;
+            carrierToUpdate.RMIS_Carrier_ID__c = RMISCarrierID;
+            carrierToUpdate.FreightTM__USDOT_Number__c = DOTNumber;
+            carrierToUpdate.FreightTM__Address__c = Address1;
+            carrierToUpdate.City__c = City;
+            carrierToUpdate.FreightTM__State_Province__c = St;
+            carrierToUpdate.FreightTM__Zip_Code__c = Zip;
+            carrierToUpdate.Primary_Contact__c = Contact;
+            carrierToUpdate.Title__c = Title;
+            carrierToUpdate.FreightTM__Phone__c = Phone;
+            carrierToUpdate.FreightTM__Email__c = Email;
+            carrierToUpdate.Billing_Name__c = Payto;
+            carrierToUpdate.FreightTM__Billing_Address__c = PaytoAddress;
+            carrierToUpdate.BILLing_city__c = PaytoCity;
+            carrierToUpdate.FreightTM__Billing_State_Province__c = PaytoSt;
+            carrierToUpdate.FreightTM__Billing_Zip_Code__c = PaytoZip;
+            
+            carrierToUpdate.Insurance_Agent_Company_Name__c = Underwriter;
+            carrierToUpdate.Insurance_Contact_Name__c = Producer;
+            carrierToUpdate.Insurance_Company_Phone__c = ProducerPhone;
+            carrierToUpdate.Insurance_Company_Fax__c = ProducerFax;
+            
+            if (!String.isBlank(PayToEmail)) {
+                carrierToUpdate.Billing_Email__c = PayToEmail;
+            } else {
+                // Handle the scenario where LiabilityEffectiveDate is empty
+                System.debug('PayToEmail is empty');
+            }
+            //carrierToUpdate.FreightTM__SCAC_Code__c = SCAC;
+            if (!String.isBlank(SCAC)) {
+                carrierToUpdate.FreightTM__SCAC_Code__c = SCAC;
+            } else {
+                // Handle the scenario where LiabilityEffectiveDate is empty
+                System.debug('SCAC is empty');
+            }
+            if (!String.isBlank(PayeeType)) {
+            carrierToUpdate.Type_of_Business__c = PayeeType;
+                } else {
+                // Handle the scenario where LiabilityEffectiveDate is empty
+                System.debug('PayeeType is empty');
+            }
+           
+            carrierToUpdate.RMIS_Registration_Date__c = DateTime.valueOf(attachDate);
+            
+            carrierToUpdate.Corporate_Contact__c = CORPORATEName;
+            carrierToUpdate.Corporate_Phone__c = CORPORATEPhone;
+            carrierToUpdate.Corporate_Email__c = CORPORATEEmail;
+            
+            carrierToUpdate.Dispatch_Contact__c = DISPATCHName;
+            carrierToUpdate.Dispatch_Phone__c = DISPATCHPhone;
+            carrierToUpdate.Dispatch_Email__c = DISPATCHEmail;
+            carrierToUpdate.Federal_Tax_ID__c = taxIdValue;
+            carrierToUpdate.FreightTM__Federal_ID__c = W9IdNode;
+            
+            //carrierToUpdate.RMIS_Last_Update_Date__c = DateTime.valueOf(LastUpdateDateTime);
+            System.debug(LastUpdateDateTime);
+            
+            // Set timestamp
+            carrierToUpdate.RMIS_Timestamp__c = DateTime.now();
+            //carrierToUpdate.General_Status__c = coverageDescription;
+            //carrierToUpdate.FreightTM__Cargo_Insurance_Expiration__c = ExpirationDate;
+            if (!String.isBlank(ExpirationDate)) {
+                // Parse ExpirationDate manually
+                List<String> effectiveDateParts = ExpirationDate.split('/');
+                if (effectiveDateParts.size() == 3) {
+                    Integer year = Integer.valueOf(effectiveDateParts[2]);
+                    Integer month = Integer.valueOf(effectiveDateParts[0]);
+                    Integer day = Integer.valueOf(effectiveDateParts[1]);
+                    carrierToUpdate.FreightTM__Cargo_Insurance_Expiration__c = Date.newInstance(year, month, day);
+                } else {
+                    // Handle invalid date format
+                    System.debug('Invalid ExpirationDate format: ' + ExpirationDate);
+                }
+            } else {
+                // Handle the scenario where ExpirationDate is empty
+                System.debug('ExpirationDate is empty');
+            }
+            
+            //carrierToUpdate.FreightTM__Cargo_Insurance_Amount__c = Decimal.valueOf(cargoLimitAmount);
+            if (!String.isBlank(cargoLimitAmount)) {
+                carrierToUpdate.FreightTM__Cargo_Insurance_Amount__c = Decimal.valueOf(cargoLimitAmount);
+            } else {
+                // Handle the scenario where LiabilityEffectiveDate is empty
+                System.debug('cargoLimitAmount is empty');
+            }
+            //autoLimitAmount
+            if (!String.isBlank(autoLimitAmount)) {
+                carrierToUpdate.Auto_Liability_Limits__c = Decimal.valueOf(autoLimitAmount);
+            } else {
+                // Handle the scenario where LiabilityEffectiveDate is empty
+                System.debug('autoLimitAmount is empty');
+            }
+            
+            //carrierToUpdate.FreightTM__Liability_Insurance_Amount__c = Decimal.valueOf(LiabilityLimitAmount);
+            if (!String.isBlank(LiabilityLimitAmount)) {
+                carrierToUpdate.FreightTM__Liability_Insurance_Amount__c = Decimal.valueOf(LiabilityLimitAmount);
+            } else {
+                // Handle the scenario where LiabilityEffectiveDate is empty
+                System.debug('LiabilityLimitAmount is empty');
+            }
+            
+            
+            if (!String.isBlank(LiabilityExpirationDate)) {
+                // Parse LiabilityExpirationDate manually
+                List<String> expirationDateParts = LiabilityExpirationDate.split('/');
+                if (expirationDateParts.size() == 3) {
+                    Integer year = Integer.valueOf(expirationDateParts[2]);
+                    Integer month = Integer.valueOf(expirationDateParts[0]);
+                    Integer day = Integer.valueOf(expirationDateParts[1]);
+                    carrierToUpdate.FreightTM__Liability_Insurance_Expiration__c = Date.newInstance(year, month, day);
+                } else {
+                    // Handle invalid date format
+                    System.debug('Invalid LiabilityExpirationDate format: ' + LiabilityExpirationDate);
+                }
+            } else {
+                // Handle the scenario where LiabilityExpirationDate is empty
+                System.debug('LiabilityExpirationDate is empty');
+            }
+            
+            
+            carriersToUpsert.add(carrierToUpdate);
+            
+            // Prepare ClearInsureds JSON array
+            Map<String, Object> clearInsured = new Map<String, Object>();
+            clearInsured.put('insdID', insdID);
+            // Add timestamp if needed
+            clearInsured.put('timeStamp', String.valueOf(DateTime.now()));
+            clearInsuredsList.add(clearInsured);
+            
+        }
+        // Prepare ClearInsureds JSON array
+        String clearInsureds = JSON.serialize(clearInsuredsList);
+        String endpoint = 'https://api.rmissecure.com/_c/std/api/DeltaAPI.aspx';
+        String requestBodyClear = '{ "clientID": 8021, "clientPassword":"-OzOLRLSe2AXvSzz", "apiMode": "CLEAR", "ClearInsureds": ' + clearInsureds + ' }';
+        HttpRequest requestClear = new HttpRequest();
+        requestClear.setEndpoint(endpoint);
+        requestClear.setMethod('POST');
+        requestClear.setHeader('Content-Type', 'application/json');
+        requestClear.setHeader('Accept', '*/*');
+        requestClear.setHeader('Accept-Encoding', 'gzip, deflate, br');
+        requestClear.setTimeout(60000);
+        requestClear.setBody(requestBodyClear);
+        
+        // Send the clear insureds request
+        Http http = new Http();
+        HttpResponse responseClear = http.send(requestClear);
+        System.debug(responseClear.getBody());
+        System.debug(responseClear.getStatusCode());
+        
+        // Insert or update carrier records
+        if (!carriersToUpsert.isEmpty()) {
+            upsert carriersToUpsert;
+        }
+    }
+    
+    
+    
+}
