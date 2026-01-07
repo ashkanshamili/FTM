@@ -1,0 +1,127 @@
+<apex:page standardcontroller="Carrier_Rate__c" extensions="QuickBooksCarrierRate" tabStyle="Carrier_Rate__c" lightningStylesheets="true">
+    <style>
+    .customerError { font-weight: bold; list-style: none; }
+    .invoiceError { color: red; font-weight: strong; }
+    .bkg-inv { background-color: #eee; }
+    .products tr { border: solid 1px #efefef; }
+    .container { padding: 0% 5%;}
+    .text { padding: 1%;}
+    </style>
+     
+    <script>
+    function launchWindow()
+    {
+        // window.top.location.reload();
+       
+    };
+    function redir() {
+        window.location = "/{!Car.Id}";
+    }
+    </script>
+    
+    <apex:pageMessages /><br />
+    <apex:form >
+       
+            <apex:outputPanel id="allPanel">
+                
+                <!--<apex:outputPanel rendered="{!NOT(cid)}">-->
+                    <script>
+                       window.onload=function()
+                       {
+                         doInit();
+                       };
+                    </script>
+                    
+                
+                 <apex:outputPanel rendered="{!car.Load_Id__r.New_QB__c == false }">
+                <table width="100%">
+                    <tr>
+                        <td align="Center" style="text-align: left; vertical-align: top; font-size: 1.5em; font-weight: bold;color: red;">
+                            **************NEW QB CHECKBOX IS SET TO FALSE | THIS INVOICE WILL BE SENT TO OLD QB ACCOUNT**************
+                        </td>
+                    </tr>
+                    </table>
+                    
+                    </apex:outputPanel>
+                
+                    <div class="container">
+                        <h2>Create/Update Carrier Rate/Bill to QuickBooks</h2>
+                        <div class="bkg-inv">
+                            <div class="text">
+                                <table width="100%">
+                                    <tr>
+                                        <td>
+                                           <span style="text-align: left; vertical-align: top; font-size: 1.5em; font-weight: bold;">Bill Name:&nbsp;<apex:outputField value="{!Car.Load_Id_Name__c}"/></span><br /><!-- (Conf. #)-->
+                                           
+                                        </td>
+                                        <td style="text-align: right; padding-right:5%;">
+                                            <span>BALANCE DUE</span><br />
+                                            <span style="font-size: 2em; font-weight: bold;"><apex:outputField value="{!Car.Rate__c}"/></span>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <br /><br />
+                                <b>Customer:</b><br />
+                                <apex:outputField value="{!Car.Carrier__c}" />
+                                <br /><br />
+                                <table width="100%">
+                                    <tr>
+                                        <td width="30%">
+                                            <b>Billing Address:</b><br />
+                                            <apex:outputField value="{!Car.Carrier__r.FreightTM__Billing_Address__c}"/><br />
+                                            <apex:outputPanel ><apex:outputText value="{!Car.Carrier__r.FreightTM__Billing_City__c}"/>, <apex:outputText value=" {!Car.Carrier__r.FreightTM__Billing_State_Province__c}"/> <apex:outputText value=" {!Car.Carrier__r.FreightTM__Billing_Zip_Code__c}"/></apex:outputPanel><br />
+                                            <apex:outputField value="{!Car.Carrier__r.FreightTM__Billing_Country__c}"/><br /><br />
+                                        </td>
+                                        <td width="30%">
+                                        </td>
+                                        <td width="20%" style="vertical-align: top;"><b>Invoice Date:</b><br />{!MONTH(TODAY())}/{!DAY(TODAY())}/{!YEAR(TODAY())}</td>
+                                        <td width="20%" style="vertical-align: top;"><b>Terms:</b><br /><apex:outputField value="{!Car.Carrier__r.Payment_Terms__c}"/></td>
+                                    </tr>
+                                </table>
+                                <table width="100%">
+                                    <tr>
+                                    </tr>
+                                </table>
+                           </div>
+                        </div>
+                        <br /><br />
+                        <table width="100%" class="products">
+                            <tr>
+                                <th width="25%"><h4>PRODUCT/SERVICE</h4></th>
+                                <th width="35%"><h4>Type</h4></th>
+                                <th width="10%"><h4>QTY</h4></th>
+                                <th width="25%"><h4>AMOUNT</h4></th>
+                                
+                            </tr>
+                        
+                             
+                                <tr>
+                                     
+                                    <td><apex:outputField value="{!Car.Product__r.name}"/></td>
+                                    <td><apex:outputField value="{!Car.Type__c}"/></td>
+                                    <td>1</td>
+                                    <td><apex:outputField value="{!Car.Rate__c}"/></td>
+                                 
+                                </tr>
+                         
+                        </table>
+                        
+                        <table width="100%">
+                            <tr>
+                                <td width="5%">&nbsp;</td>
+                                <td width="15%">&nbsp;</td>
+                                <td width="34%">&nbsp;</td>
+                                <td width="10%">&nbsp;</td>
+                                <td width="10%">&nbsp;</td>
+                                <td width="11%" style="text-align: left;"><h3>Total</h3></td>
+                                <td width="15%" style="text-align: left;"><h3><apex:outputField value="{!Car.Rate__c}"/></h3></td>
+                            </tr>
+                        </table>
+                        <br/> 
+                        <apex:commandButton onComplete="redir();" value="Back" />
+                        <apex:commandButton value="Create/Update Carrier Rate/Bill" action="{!send}" />
+                        <br/> <br/> <br/> <br/> 
+                    </div>
+                </apex:outputPanel>
+    </apex:form>
+</apex:page>
