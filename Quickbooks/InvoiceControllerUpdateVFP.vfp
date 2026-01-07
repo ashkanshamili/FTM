@@ -1,0 +1,160 @@
+<apex:page standardcontroller="FreightTM__Load__c" extensions="InvoiceControllerUpdate" tabStyle="FreightTM__Load__c" lightningStylesheets="true">
+    <style>
+        .customerError { font-weight: bold; list-style: none; color: #484850 }
+        .invoiceError { color: red; font-weight: strong; }
+        .bkg-inv { background-color: #fff8f2; border: 1px solid #ffbf42; border-radius : 10px  }
+        .products tr { border: solid 1px #ffbf42;  border-radius : 15px }
+        .td {padding: 3px;}
+        .container { padding: 0% 5%;}
+        .text { padding: 1%;}
+        .button {
+            display: inline-block !important;
+            vertical-align: middle !important;
+            appearance: none !important;
+            background: linear-gradient(to bottom, #ffbf42 100%, #ffbf42 0%) !important;
+            background-size: 100% 100% !important;
+            background-repeat: no-repeat !important;
+            background-position: center !important;
+            background-color: #ca1f26 !important;
+            color: #3e3e47 !important;
+            font-size: 12px !important;
+            font-weight: 800 !important;
+            border: none !important;
+            cursor: pointer !important;
+            outline: none !important;
+            transition: background-size 0.4s ease, color 0.3s ease !important;
+            border-radius: 5px !important;
+        }
+        
+        .button:hover {
+            color: #fff !important;
+            background-size: 100% 0% !important;
+        }
+    </style>
+    
+    <script>
+    function launchWindow()
+    {
+        // window.top.location.reload();
+        
+    };
+    function redir() {
+        window.location = "/{!lo.Id}";
+    }
+    </script>
+    
+    <apex:pageMessages /><br />
+    <apex:form >
+        
+        <apex:outputPanel id="allPanel">
+            
+            <!--<apex:outputPanel rendered="{!NOT(cid)}">-->
+            <script>
+            window.onload=function()
+            {
+                doInit();
+            };
+            </script>
+            <apex:outputPanel rendered="{!FreightTM__Load__c.New_QB__c == false}">
+                <table width="100%">
+                </table>
+                
+            </apex:outputPanel>
+            
+            <div class="container">
+                <h2>Update Invoice on QuickBooks</h2>
+                <div class="bkg-inv">
+                    <div class="text">
+                        <table width="100%">
+                            <tr>
+                                <td>
+                                    <span style="text-align: left; vertical-align: top; font-size: 1.5em; font-weight: bold;">Invoice No:&nbsp;<apex:outputField value="{!lo.Name}"/></span><br /><!-- (Conf. #)-->
+                                    
+                                </td>
+                                <td style="text-align: right; padding-right:5%; display: flex; gap : 10px; align-items: center">
+                                    <span>BALANCE DUE</span><br />
+                                    <span style="font-size: 1.5em; font-weight: bold;"><apex:outputField value="{!lo.FreightTM__Total__c}"/></span>
+                                </td>
+                            </tr>
+                        </table>
+                        <br /><br />
+                        <b>Customer:</b><br />
+                        <apex:outputField value="{!lo.FreightTM__Customer__c}" />
+                        <br /><br />
+                        <table width="100%">
+                            <tr>
+                                <td width="30%">
+                                    <b>Billing Address:</b><br />
+                                    <apex:outputField value="{!lo.FreightTM__Customer__r.BillingStreet}"/><br />
+                                    <apex:outputPanel ><apex:outputText value="{!lo.FreightTM__Customer__r.BillingCity}"/>, <apex:outputText value=" {!lo.FreightTM__Customer__r.BillingState}"/> <apex:outputText value=" {!lo.FreightTM__Customer__r.BillingPostalCode}"/></apex:outputPanel><br />
+                                    <apex:outputField value="{!lo.FreightTM__Customer__r.BillingCountry}"/><br /><br />
+                                </td>
+                                <td width="30%">
+                                    <b>Shipping Address:</b><br />
+                                    <apex:outputText value="{!FreightTM__Load__c.FreightTM__DeliveryFacility__r.Name}" /><br />
+                                    <apex:outputField value="{!lo.FreightTM__DeliveryFacility__r.FreightTM__Street__c}"/><br />
+                                    <apex:outputPanel ><apex:outputText value="{!lo.FreightTM__DeliveryFacility__r.FreightTM__City__c}"/>, <apex:outputText value=" {!lo.FreightTM__DeliveryFacility__r.FreightTM__State__c}"/> <apex:outputText value=" {!lo.FreightTM__DeliveryFacility__r.FreightTM__Zip_Code__c}"/></apex:outputPanel><br />
+                                    <apex:outputField value="{!lo.FreightTM__DeliveryFacility__r.FreightTM__Country__c}"/><br />
+                                </td>
+                                <td width="20%" style="vertical-align: top;"><b>Invoice Date:</b><br />{!MONTH(TODAY())}/{!DAY(TODAY())}/{!YEAR(TODAY())}</td>
+                                <td width="20%" style="vertical-align: top;"><b>Terms:</b><br />
+                                    <apex:outputField value="{!lo.FreightTM__Customer__r.Payment_Terms__c}"/></td>
+                            </tr>
+                        </table>
+                        <br /><br />
+                        <table width="100%">
+                            <tr>
+                                <td width="30%" style="vertical-align: top;"><b>SHIP DATE:</b> <br /><apex:outputText value="{0, date, MM'/'d'/'yyyy}"><apex:param value="{!lo.FreightTM__Delivery_Date__c}"/></apex:outputText></td>
+                                <td width="40%" style="vertical-align: top;"><b>TRACKING NO.</b><br /><apex:outputField value="{!lo.FreightTM__Delivery_Remarks__c}"/></td><!-- Tracking_Number__c -->
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <br /><br />
+                <table width="100%" class="products">
+                    <tr>
+                        <th width="5%" style="padding-left: 1%; background-color: #fff8f2;"><h4>#</h4></th>
+                        <th width="15%" style="background-color: #fff8f2;"><h4>PRODUCT/SERVICE</h4></th>
+                        <th width="35%" style="background-color: #fff8f2;"><h4>DESCRIPTION</h4></th>
+                        <th width="5%" style="background-color: #fff8f2;"><h4>QTY</h4></th>
+                        <th width="10%" style="background-color: #fff8f2;"><h4>RATE</h4></th>
+                        <th width="25%" style="background-color: #fff8f2;"><h4>AMOUNT</h4></th>
+                        <!--<th width="15%"><h4>SALES TAX</h4></th> -->
+                    </tr>
+                    
+                    <apex:variable value="{!1}" var="rowNum"/>
+                    <apex:repeat var="s" value="{!lo.FreightTM__Line_Items__r}">
+                        <tr>
+                            <td height="40" style="padding-left: 1%;"><apex:outputText value="{!FLOOR(rowNum)}"/><apex:variable var="rowNum" value="{!rowNum + 1}"/></td>
+                            <td><apex:outputField value="{!s.Product__r.name}"/></td>
+                            <td><apex:outputPanel ><apex:outputField value="{!lo.FreightTM__Container_Size__c}"/>&nbsp;-&nbsp;
+                                <apex:outputField value="{!lo.FreightTM__PickupFacility__r.FreightTM__City__c}"/>,&nbsp;<apex:outputField value="{!lo.FreightTM__PickupFacility__r.FreightTM__State__c}"/>
+                                &nbsp;to&nbsp;<apex:outputField value="{!lo.FreightTM__DeliveryFacility__r.FreightTM__City__c}"/>,&nbsp;<apex:outputField value="{!lo.FreightTM__DeliveryFacility__r.FreightTM__State__c}"/>
+                                </apex:outputPanel></td>
+                            <td><apex:outputField value="{!s.FreightTM__Number_of_Units__c}"/></td>
+                            <td><apex:outputField value="{!s.FreightTM__Unit_Price__c}"/></td>
+                            <td><apex:outputField value="{!s.FreightTM__Amount__c}"/></td>
+                            
+                        </tr>
+                    </apex:repeat>
+                </table>
+                
+                <table width="100%">
+                    <tr>
+                        <td width="5%">&nbsp;</td>
+                        <td width="15%">&nbsp;</td>
+                        <td width="34%">&nbsp;</td>
+                        <td width="10%">&nbsp;</td>
+                        <td width="10%">&nbsp;</td>
+                        <td width="11%" style="text-align: left;"><h3>Total</h3></td>
+                        <td width="15%" style="text-align: left;"><h3><apex:outputField value="{!lo.FreightTM__Total__c}"/></h3></td>
+                    </tr>
+                </table>
+                <br/> 
+                <apex:commandButton onComplete="redir();" value="Back" />
+                <apex:commandButton value="Update Invoice" action="{!send}" styleClass="button"/>
+                <br/> <br/> <br/> <br/> 
+            </div>
+        </apex:outputPanel>
+    </apex:form>
+</apex:page>

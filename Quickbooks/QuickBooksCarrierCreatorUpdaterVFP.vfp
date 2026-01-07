@@ -1,0 +1,96 @@
+<apex:page standardcontroller="FreightTM__Carrier__c" extensions="QuickBooksCarrierCreatorUpdater" tabStyle="FreightTM__Carrier__c" lightningStylesheets="true">
+    <style>
+    .customerError { font-weight: bold; list-style: none; color: #484850 }
+    .invoiceError { color: red; font-weight: strong; }
+    .bkg-inv { background-color: #fff8f2; border: 1px solid #ffbf42; border-radius : 10px  }
+    .products tr { border: solid 1px #ffbf42;  border-radius : 15px }
+    .container { padding: 0% 5%;}
+    .text { padding: 1%;}
+    .button {
+        display: inline-block !important;
+        vertical-align: middle !important;
+        appearance: none !important;
+        background: linear-gradient(to bottom, #ffbf42 100%, #ffbf42 0%) !important;
+        background-size: 100% 100% !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        background-color: #ca1f26 !important;
+        color: #3e3e47 !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        border: none !important;
+        cursor: pointer !important;
+        outline: none !important;
+        transition: background-size 0.4s ease, color 0.3s ease !important;
+        border-radius: 5px !important;
+    }
+    
+    .button:hover {
+        color: #fff !important;
+        background-size: 100% 0% !important;
+    }
+    </style>
+     
+    <script>
+    function launchWindow()
+    {
+        // window.top.location.reload();
+       
+    };
+    function redir() {
+        window.location = "/{!Ca.Id}";
+    }
+    </script>
+    
+    <apex:pageMessages /><br />
+    <apex:form >
+       
+            <apex:outputPanel id="allPanel">
+                    <script>
+                       window.onload=function()
+                       {
+                         doInit();
+                       };
+                    </script>
+                    <div class="container">
+                        <h2>Create/Update Carrier on QuickBooks</h2>
+                        <div class="bkg-inv">
+                            <div class="text">
+                                <table width="100%">
+                                    <tr>
+                                        <td>
+                                           <span style="text-align: left; vertical-align: top; font-size: 1.5em; font-weight: bold;">Carrier:&nbsp;<apex:outputField value="{!FreightTM__Carrier__c.Name}"/></span><br /><!-- (Conf. #)-->
+                                           
+                                        </td>
+                                        <td style="text-align: right; padding-right:5%;">
+                                            <span></span><br />
+                                           
+                                        </td>
+                                    </tr>
+                                </table>
+                                <br /><br />
+                                <table width="100%">
+                                    <tr>
+                                        <td width="30%">
+                                            <b>Billing Address:</b><br />
+                                            <apex:outputField value="{!FreightTM__Carrier__c.FreightTM__Billing_Address__c}"/><br />
+                                            <apex:outputPanel ><apex:outputText value="{!FreightTM__Carrier__c.FreightTM__Billing_City__c}"/>, <apex:outputText value=" {!FreightTM__Carrier__c.FreightTM__Billing_State_Province__c}"/> <apex:outputText value=" {!FreightTM__Carrier__c.FreightTM__Billing_Zip_Code__c}"/></apex:outputPanel><br />
+                                            <apex:outputField value="{!FreightTM__Carrier__c.FreightTM__Billing_Country__c}"/><br /><br />
+                                        </td>
+                                        <td width="30%" style="vertical-align: top;"><b>Email:</b><br /><apex:outputText value=" {!FreightTM__Carrier__c.FreightTM__Email__c}"/></td>
+                                        <td width="30%" style="vertical-align: top;"><b>Phone:</b><br /><apex:outputText value=" {!FreightTM__Carrier__c.FreightTM__Phone__c}"/></td>
+                                        <td width="30%" style="vertical-align: top;"><b>Terms:</b><br /><apex:outputText value=" {!FreightTM__Carrier__c.Payment_Terms__c}"/></td> 
+                                    </tr>
+                                </table>
+                                
+                           </div>
+                        </div>
+                        <br />
+                        <apex:commandButton onComplete="redir();" value="Back" />
+                        <!--<apex:commandButton value="Create/Update Carrier ** OLD **" action="{!send}" />-->
+                        <apex:commandButton value="Create/Update Carrier ON QuickBooks" action="{!send2}" styleClass="button" />
+                        <br/> <br/> <br/> <br/> 
+                    </div>
+                </apex:outputPanel>
+    </apex:form>
+</apex:page>
