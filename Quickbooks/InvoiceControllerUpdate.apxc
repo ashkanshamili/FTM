@@ -1,0 +1,848 @@
+public class InvoiceControllerUpdate{
+    
+    public string Termss;
+    public FreightTM__Load__c lo {get; set;}
+    public id loadId {get; set;}
+    public string qbcustomerid;
+    public string qbInvoiceid;
+    public string msg;
+    public integer taxcodeid;
+    public List<Customer> clist;
+    public string cname;//for unit test
+    public string cnames;//for unit test
+    public string cnames2;//for unit test
+    public string invbody3;//for unit test
+    public string invbody_x;//for unit test
+    
+    //Apex classes from QB Customer Object
+    public class BillAddr {
+        public String Id;
+        public String Line1;
+        public String City;
+        public string Country;
+        public String CountrySubDivisionCode;
+        public String PostalCode;
+    }
+    public class CurrencyRef {
+        public String value;
+        public String name;
+    }
+    public class Cust { //this needs to be in a class for json deserialization to work
+        public QueryResponse QueryResponse;
+        public String time_x; //time is an apex reserved word, replaced it with time_x in the response string
+    }
+    public class PrimaryPhone {
+        public String FreeFormNumber;
+    }
+    public class Customer {
+        public Boolean Taxable;
+        public BillAddr BillAddr;
+        public Boolean Job;
+        public Boolean BillWithParent;
+        public Double Balance;
+        public Double BalanceWithJobs;
+        public CurrencyRef CurrencyRef;
+        public String PreferredDeliveryMethod;
+        public String domain;
+        public Boolean sparse;
+        public String Id;
+        public String SyncToken;
+        public MetaData MetaData;
+        public String GivenName;
+        public String FamilyName;
+        public String FullyQualifiedName;
+        public String CompanyName;
+        public String DisplayName;
+        public String PrintOnCheckName;
+        public Boolean Active;
+        public PrimaryPhone PrimaryPhone;
+    }
+    public class MetaData {
+        public String CreateTime;
+        public String LastUpdatedTime;
+    }
+    public class QueryResponse {
+        public List<Customer> Customer; 
+        public Integer startPosition;
+        public Integer maxResults;
+    }
+    
+    //Apex classes from QB Invoice Object
+    public class BillAddr_i { //rename to avoid duplicate class
+        public String Id;
+        public String Line1;
+        public String Line2;
+        public String City;
+        public String Country;
+        public String CountrySubDivisionCode;
+        public String PostalCode;
+        public String Lat;
+        public String Long_Z; // in json: Long
+    }
+    public class CurrencyRef_i {
+        public String value;
+        public String name;
+    }
+    public class Invoice {
+        public Integer Deposit;
+        public Boolean AllowIPNPayment;
+        public Boolean AllowOnlinePayment;
+        public Boolean AllowOnlineCreditCardPayment;
+        public Boolean AllowOnlineACHPayment;
+        public String EInvoiceStatus;
+        public String ECloudStatusTimeStamp;
+        public String domain;
+        public Boolean sparse;
+        public String Id;
+        public String SyncToken;
+        public MetaData_i MetaData_i;
+        public List<CustomField> CustomField;
+        public String DocNumber;
+        public String TxnDate;
+        public CurrencyRef_i CurrencyRef_i;
+        public List<LinkedTxn> LinkedTxn;
+        public List<Line> Line;
+        public CurrencyRef CustomerRef;
+        public TaxCodeRef CustomerMemo; //
+        public BillAddr_i BillAddr_i;
+        public TaxCodeRef SalesTermRef; //
+        public String DueDate;
+        public Double TotalAmt;
+        public Double HomeTotalAmt;
+        public Boolean ApplyTaxAfterDiscount; //USA
+        public String PrintStatus;
+        public String EmailStatus;
+        public BillEmail BillEmail;
+        public Double Balance; //use Double instead of Integer, otherwise errors with decimals
+        public DeliveryInfo DeliveryInfo;
+        public BillAddr_Z ShipAddr;
+
+    }
+    public class BillEmail {
+        public String Address;
+    }
+    public class DeliveryInfo {
+        public String DeliveryType;
+        public String DeliveryTime;
+    }
+    public class BillAddr_Z {
+        public String Id;
+        public String Line1;
+        public String Line2;
+        public String City;
+        public String CountrySubDivisionCode;
+        public String PostalCode;
+    }
+    public class SalesItemLineDetail {
+        public CurrencyRef ItemRef;
+        public Double UnitPrice; //use Double instead of Integer, otherwise errors with decimals
+        public Double Qty; //
+        public CurrencyRef ItemAccountRef;
+        public TaxCodeRef TaxCodeRef; //
+    }
+    public class Line_Z {
+        public String Id;
+        public Integer LineNum;
+        public Double Amount; //use Double instead of Integer, otherwise errors with decimals
+        public String DetailType;
+        public SalesItemLineDetail SalesItemLineDetail;
+        public CustomField SubTotalLineDetail;
+    }
+    
+    public class Line_Y {
+        public String Id;
+        public Integer LineNum;
+        public Double Amount; //use Double instead of Integer, otherwise errors with decimals
+        public String DetailType;
+        public SalesItemLineDetail SalesItemLineDetail;
+        public CustomField SubTotalLineDetail;
+    }
+    
+    public class Line_X {
+        public String Id;
+        public Integer LineNum;
+        public Double Amount; //use Double instead of Integer, otherwise errors with decimals
+        public String DetailType;
+        public SalesItemLineDetail SalesItemLineDetail;
+        public CustomField SubTotalLineDetail;
+    }
+    public class Line_W {
+        public String Id;
+        public Integer LineNum;
+        public Double Amount; //use Double instead of Integer, otherwise errors with decimals
+        public String DetailType;
+        public SalesItemLineDetail SalesItemLineDetail;
+        public CustomField SubTotalLineDetail;
+    }
+    public class Inv {
+        public QueryResponse_i QueryResponse_i;
+        public String time_i;
+    }
+    
+    public class Line {
+        public String Id;
+        public Integer LineNum;
+        public Double Amount; //use Double instead of Integer, otherwise errors with decimals
+        public String DetailType;
+        public SalesItemLineDetail SalesItemLineDetail;
+        public LinkedTxn SubTotalLineDetail;
+    }
+    public class TaxCodeRef { //
+        public String value;
+    }
+    public class MetaData_i {
+        public String CreateTime;
+        public String LastUpdatedTime;
+    }
+    
+    public class QueryResponse_i { //rename to avoid duplicate class
+        public List<Invoice> Invoice;
+        public Integer startPosition;
+        public Integer maxResults;
+        public Integer totalCount;
+    }
+    public class CustomField {
+        public String DefinitionId;
+        public String Type_Z; // in json: Type
+        public String Name;
+        public String StringValue;
+    }
+    
+    public class LinkedTxn {
+        public String TxnId;
+        public String TxnType;
+    }
+    
+    
+    public InvoiceControllerUpdate(ApexPages.StandardController stdController) {
+        loadId = ApexPages.currentPage().getParameters().get('id');
+        clist = new List<Customer>();
+        
+        lo = [select Id, Name, (select Id, Name, FreightTM__Type__c, FreightTM__Description__c, FreightTM__Amount__c,Product__c,Product__r.name,
+                                Product__r.LQB_QB_Id__c,//Freight_Component__r.QB_Id__c,Freight_Component__r.Freight_Component_Name__c,  Freight_Component__r.name,
+                                FreightTM__Unit_Price__c,FreightTM__Number_of_Units__c from FreightTM__Line_Items__r), 
+              FreightTM__pickup_city__c, FreightTM__Pickup_State__c, FreightTM__Pickup_Country__c, FreightTM__Pickup_Arrival__c, 
+              FreightTM__Load_Canceled__c,FreightTM__Container_Size__c,LQB_QB_Id__c,LQB_QB_error__c,
+              FreightTM__PickupFacility__r.FreightTM__City__c,FreightTM__PickupFacility__r.FreightTM__state__c,
+              FreightTM__DeliveryFacility__r.FreightTM__City__c,Balance_Due__c,Bill_Reference__c,FreightTM__Remarks__c,
+              FreightTM__DeliveryFacility__r.FreightTM__state__c,FreightTM__DeliveryFacility__r.FreightTM__Country__c,
+              FreightTM__DeliveryFacility__r.FreightTM__Zip_Code__c,FreightTM__DeliveryFacility__r.Name,
+              FreightTM__DeliveryFacility__r.FreightTM__Street__c,FreightTM__Pickup_Date__c,FreightTM__Delivery_Date__c,FreightTM__Delivery_Remarks__c, //Tracking_Number__c,FreightTM__Customer__r.Payment_Terms__c,
+              FreightTM__Confirmation_Number__c, FreightTM__Customer__c, FreightTM__Customer__r.Name, FreightTM__Customer__r.BillingAddress, 
+              FreightTM__Customer__r.BillingStreet, FreightTM__Customer__r.BillingCity, 
+              FreightTM__Customer__r.BillingState, FreightTM__Customer__r.BillingPostalCode, FreightTM__Customer__r.BillingCountry,
+              FreightTM__Customer__r.QBCustomerID__c,FreightTM__Customer__r.Payment_Terms__c,FreightTM__Customer__r.Accounting_Email__c,
+              FreightTM__Customer__r.ShippingAddress, FreightTM__Customer__r.ShippingStreet, FreightTM__Customer__r.ShippingCity, 
+              FreightTM__Customer__r.FreightTM__General_Email__c,FreightTM__Customer__r.Net_Pay_Terms__c,
+              FreightTM__Customer__r.ShippingState, FreightTM__Customer__r.ShippingPostalCode, FreightTM__Customer__r.ShippingCountry,
+              FreightTM__Customer__r.Phone,  New_QB__c,
+              FreightTM__Rate__c, FreightTM__Status__c, FreightTM__Delivery_city__c, FreightTM__Delivery_State__c, FreightTM__Delivery_Country__c, 
+              FreightTM__Delivery_Departure__c, FreightTM__total__c,FreightTM__Customer__r.Payment_Terms_QB_ID__c,New_QuickBooks_ID__c
+              
+              from FreightTM__Load__c 
+              where Id = :loadId];
+    }
+    
+    @future(callout=false)
+    public static void updateProductsQBId(Map<Id, String> prodIdToQBId) {
+        List<Product2> prods = [
+            SELECT Id, LQB_QB_Id__c
+            FROM Product2
+            WHERE Id IN :prodIdToQBId.keySet()
+        ];
+    
+        for (Product2 p : prods) {
+            p.LQB_QB_Id__c = prodIdToQBId.get(p.Id);
+        }
+    
+        if (!prods.isEmpty()) {
+            update prods;
+        }
+    }
+
+    
+    //create invoice in QB
+    public PageReference send() {
+        
+        string NEWQB ='QuickBooks';
+        //if(lo.New_QB__c == True) { NEWQB = 'QuickBooks2';}
+        //else{ NEWQB = 'QuickBooks';}
+        
+        try{ 
+         // ================= FETCH QB PRODUCT IDS (NO DML HERE) =================
+        Map<String, Id> productNameToSFId = new Map<String, Id>();
+        
+        for (FreightTM__Line_Item__c li : lo.FreightTM__Line_Items__r) {
+            if (
+                li.Product__r != null &&
+                li.Product__r.Name != null &&
+                li.Product__r.LQB_QB_Id__c == null
+            ) {
+                productNameToSFId.put(li.Product__r.Name, li.Product__r.Id);
+            }
+        }
+        
+        Map<Id, String> sfProductIdToQBId = new Map<Id, String>();
+        
+        if (!productNameToSFId.isEmpty()) {
+        
+            String names = '\'' + String.join(
+                new List<String>(productNameToSFId.keySet()), '\',\''
+            ) + '\'';
+        
+            HttpRequest prodReq = new HttpRequest();
+            prodReq.setEndpoint(
+                'callout:' + NEWQB +
+                '/query?query=select%20Id,Name%20from%20Item%20where%20Name%20in%20(' +
+                EncodingUtil.urlEncode(names, 'UTF-8') + ')'
+            );
+            prodReq.setMethod('GET');
+            prodReq.setHeader('Accept', 'application/json');
+        
+            HttpResponse prodRes = new Http().send(prodReq);
+        
+            if (prodRes.getStatusCode() >= 200 && prodRes.getStatusCode() < 300) {
+        
+                Map<String, Object> json =
+                    (Map<String, Object>) JSON.deserializeUntyped(prodRes.getBody());
+        
+                if (json.containsKey('QueryResponse')) {
+                    Map<String, Object> qr =
+                        (Map<String, Object>) json.get('QueryResponse');
+        
+                    if (qr != null && qr.containsKey('Item')) {
+                        for (Object o : (List<Object>) qr.get('Item')) {
+                            Map<String, Object> item = (Map<String, Object>) o;
+                            String name = (String) item.get('Name');
+                            String qbId = (String) item.get('Id');
+        
+                            if (productNameToSFId.containsKey(name)) {
+                                sfProductIdToQBId.put(
+                                    productNameToSFId.get(name),
+                                    qbId
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+            }
+
+            // validation for customer↔QB mapping
+            if(lo.FreightTM__Customer__c == null || lo.FreightTM__Customer__r.QBCustomerID__c == null && lo.New_QB__c == false) {
+                ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.Error, 'Missing Old Customer QB.'));
+                return null;	
+            } else if(lo.FreightTM__Customer__c == null && lo.New_QB__c == true){
+                ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.Error, 'Missing NEW Customer QB. Please check the Assigned Customer'));
+                return null;	
+            }
+            else{
+                // check if invoice already exists in QB
+                JSONGenerator geni = JSON.createGenerator(true); 
+                String invoicestr = geni.getAsString();
+                HttpRequest reqinv = new HttpRequest();
+                reqinv.setEndpoint('callout:'+NEWQB+'/query?query=select%20%2a%20from%20Invoice%20where%20DocNumber%20%3d%20%27'+ lo.name +'%27');
+                //reqinv.setEndpoint('callout:quickbooks/query?query=select%20%2a%20from%20Invoice%20where%20DocNumber%20%3d%20%27'+ lo.Load_Ref__c +'%27&minorversion=4');
+                reqinv.setHeader('Accept','application/json');
+                reqinv.setMethod('GET');
+                reqinv.setTimeout(2000); // timeout in milliseconds
+                reqinv.setBody(invoicestr);
+                
+                Http httpinv = new Http();
+                HTTPResponse resinv = httpinv.send(reqinv);    
+                
+                String invbody = resinv.getBody();
+                String invbody2 = invbody.replace('"BillAddr":', '"BillAddr_i":'); //to avoid duplicate classes
+                String invbody3 = invbody2.replace('"QueryResponse":', '"QueryResponse_i":'); //to avoid duplicate classes
+                String invbody4 = invbody3.replace('"MetaData":', '"MetaData_i":'); //to avoid duplicate classes
+                String invbody5 = invbody4.replace('"CurrencyRef":', '"CurrencyRef_i":'); //to avoid duplicate classes
+                String invbody_x = invbody5.replace('"time":', '"time_i":'); //time is an apex reserved word, replaced it with time_i
+                system.debug('III: ' + invbody_x);
+                
+                //If no errors in query response, deserialize json string response and assign variables to values.
+                if (resinv.getStatusCode() >= 200 && resinv.getStatusCode() < 300) {
+                    InvoiceControllerUpdate.Inv invt = (InvoiceControllerUpdate.Inv)JSON.deserialize(invbody_x, InvoiceControllerUpdate.Inv.class);
+                    system.debug('Invoice: ' + invt);
+                    
+                    QueryResponse_i v = invt.QueryResponse_i;
+                    system.debug('Invoice: ' + v); 
+                    
+                    List<Invoice> invlist = v.Invoice;
+                    system.debug('Invoice: ' + invlist);
+                    
+                    // ================= UPDATE EXISTING INVOICE =================
+                    if(invlist != null) { 
+                        for(Invoice qbi : invlist) {
+                            system.debug('Invoice val: ' + qbi.DocNumber);
+                            //check if Invoice exists in QB, if it does, display msg
+                            String synctoken = qbi.SyncToken;
+                            String QBInvoiceID = qbi.ID;
+                            String QBInvoiceDate = qbi.TxnDate;
+                            
+                            if(qbi.DocNumber == lo.name || qbi.DocNumber == lo.FreightTM__Remarks__c) {
+                                
+                                JSONGenerator gen = JSON.createGenerator(true);
+                                gen.writeStartObject();
+                                gen.writeStringField('TxnDate', QBInvoiceDate);
+                                gen.writeStringField('domain', 'QBO');
+                                
+                                // ---------- Lines (NEW + OLD QB) ----------
+                                gen.writeFieldName('Line');
+                                gen.writeStartArray();
+                                
+                                if (lo.FreightTM__Line_Items__r != null) {
+                                    for(integer i = 0; i < lo.FreightTM__Line_Items__r.size(); i++) { 
+                                        string QBIDstring;
+                                        string QBName;
+                                        if(lo.New_QB__c == True ) {
+                                            Id sfProductId = lo.FreightTM__Line_Items__r[i].Product__r.Id;
+                                            QBIDstring = sfProductIdToQBId.containsKey(sfProductId)
+                                                ? sfProductIdToQBId.get(sfProductId)
+                                                : (lo.FreightTM__Line_Items__r[i].Product__r.LQB_QB_Id__c != null
+                                                    ? lo.FreightTM__Line_Items__r[i].Product__r.LQB_QB_Id__c
+                                                    : '1');
+
+                                            QBName = (lo.FreightTM__Line_Items__r[i].Product__r.Name != null)
+                                                ? lo.FreightTM__Line_Items__r[i].Product__r.Name : 'Services';
+                                        } else {
+                                            Id sfProductId = lo.FreightTM__Line_Items__r[i].Product__r.Id;
+                                            QBIDstring = sfProductIdToQBId.containsKey(sfProductId)
+                                                ? sfProductIdToQBId.get(sfProductId)
+                                                : (lo.FreightTM__Line_Items__r[i].Product__r.LQB_QB_Id__c != null
+                                                    ? lo.FreightTM__Line_Items__r[i].Product__r.LQB_QB_Id__c
+                                                    : '1');
+                                            QBName = (lo.FreightTM__Line_Items__r[i].Product__r.Name != null)
+                                                ? lo.FreightTM__Line_Items__r[i].Product__r.Name : 'Services';
+                                        }
+                                        
+                                        decimal UnitPrice = (lo.FreightTM__Line_Items__r[i].FreightTM__Unit_Price__c != null)
+                                            ? lo.FreightTM__Line_Items__r[i].FreightTM__Unit_Price__c : 0;
+                                        Double Quantity = (lo.FreightTM__Line_Items__r[i].FreightTM__Number_of_Units__c != null)
+                                            ? lo.FreightTM__Line_Items__r[i].FreightTM__Number_of_Units__c : 0;
+                                        decimal TotalPrice = (lo.FreightTM__Line_Items__r[i].FreightTM__Amount__c != null)
+                                            ? lo.FreightTM__Line_Items__r[i].FreightTM__Amount__c : 0;
+                                        
+                                        string ContainerSize = (lo.FreightTM__Container_Size__c != null) ? lo.FreightTM__Container_Size__c : '';
+                                        string PickupFacilityCity = (lo.FreightTM__PickupFacility__r.FreightTM__City__c != null) ? lo.FreightTM__PickupFacility__r.FreightTM__City__c : '';
+                                        string PickupFacilitystate = (lo.FreightTM__PickupFacility__r.FreightTM__state__c != null) ? lo.FreightTM__PickupFacility__r.FreightTM__state__c : '';
+                                        string DeliveryFacilityCity = (lo.FreightTM__DeliveryFacility__r.FreightTM__City__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__City__c : '';
+                                        string DeliveryFacilitystate = (lo.FreightTM__DeliveryFacility__r.FreightTM__state__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__state__c : '';
+                                        
+                                        gen.writeStartObject();
+                                        gen.writeStringField('Description', ContainerSize + ' - ' + PickupFacilityCity + ', ' + PickupFacilitystate + ' to ' + DeliveryFacilityCity + ', ' + DeliveryFacilitystate); 
+                                        gen.writeNumberField('Amount', TotalPrice);
+                                        gen.writeStringField('DetailType', 'SalesItemLineDetail');
+                                        gen.writeFieldName('SalesItemLineDetail');
+                                        gen.writeStartObject();
+                                        gen.writeFieldName('ItemRef');
+                                        gen.writeStartObject();
+                                        gen.writeStringField('value', QBIDstring);
+                                        gen.writeStringField('name', QBName );
+                                        gen.writeEndObject();
+                                        gen.writeNumberField('UnitPrice', UnitPrice ); 
+                                        gen.writeNumberField('Qty', Quantity );
+                                        gen.writeFieldName('TaxCodeRef');
+                                        gen.writeStartObject();
+                                        gen.writeStringField('value', 'NON' );
+                                        gen.writeEndObject();
+                                        gen.writeEndObject();
+                                        gen.writeEndObject();
+                                    }
+                                }
+                                gen.writeEndArray();
+                                
+                                gen.writeBooleanField('ApplyTaxAfterDiscount', false);
+                                gen.writeStringField('DocNumber', lo.name);
+                                gen.writeBooleanField('sparse', false);
+                                
+                                
+                                
+                                // ---------- CustomerRef + Email ----------
+                                string QBCustomerIDField = (lo.New_QB__c == True)
+                                    ? lo.FreightTM__Customer__r.QBCustomerID__c
+                                    : lo.FreightTM__Customer__r.QBCustomerID__c;
+                                
+                                string CustomerEmailAdd = (lo.FreightTM__Customer__r.Accounting_Email__c != null)
+                                    ? lo.FreightTM__Customer__r.Accounting_Email__c : '';
+                                
+                                gen.writeFieldName('CustomerRef');
+                                gen.writeStartObject();
+                                gen.writeStringField('name', (lo.FreightTM__Customer__r.Name != null ? lo.FreightTM__Customer__r.Name : ''));
+                                gen.writeStringField('value', QBCustomerIDField );
+                                gen.writeEndObject();
+                                
+                                gen.writeFieldName('BillEmail');
+                                gen.writeStartObject();
+                                gen.writeStringField('Address', CustomerEmailAdd );
+                                gen.writeEndObject();
+                                
+                                // ---------- ShipAddr ----------
+                                string ShippingName = (lo.FreightTM__DeliveryFacility__r.Name != null) ? lo.FreightTM__DeliveryFacility__r.Name : '';
+                                string ShippingStreet = (lo.FreightTM__DeliveryFacility__r.FreightTM__Street__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__Street__c : '';
+                                string ShippingState = (lo.FreightTM__DeliveryFacility__r.FreightTM__State__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__State__c : '';
+                                string ShippingCity = (lo.FreightTM__DeliveryFacility__r.FreightTM__City__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__City__c : '';
+                                string ShippingCountry = (lo.FreightTM__DeliveryFacility__r.FreightTM__Country__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__Country__c : '';
+                                string ShippingPostalCode = (lo.FreightTM__DeliveryFacility__r.FreightTM__Zip_Code__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__Zip_Code__c : '';
+                                
+                                gen.writeFieldName('ShipAddr');
+                                gen.writeStartObject();
+                                gen.writeStringField('Line1', ShippingName );
+                                gen.writeStringField('Line2', ShippingStreet );
+                                gen.writeStringField('City', ShippingCity );
+                                gen.writeStringField('CountrySubDivisionCode', ShippingState );
+                                gen.writeStringField('PostalCode', ShippingPostalCode);
+                                gen.writeStringField('Country', ShippingCountry);
+                                gen.writeEndObject();
+                                
+                                // ---------- Terms (New vs Old) ----------
+                                String pt = (lo.FreightTM__Customer__r.Payment_Terms__c != null)
+                                    ? String.valueOf(lo.FreightTM__Customer__r.Payment_Terms__c).trim() : null;
+                                String PaymentTermsID = '6';
+                                if (lo.New_QB__c == true) {
+                                    Map<String, String> newQBMap = new Map<String, String>{
+                                        'Due Upon Receipt' => '6',
+                                            'Net 15'           => '7',
+                                            'Net 30'           => '8',
+                                            'Net 60'           => '9'
+                                            };
+                                 PaymentTermsID = (pt != null && newQBMap.containsKey(pt)) ? newQBMap.get(pt) : '6';
+                                } else {
+                                    Map<String, String> oldQBMap = new Map<String, String>{
+                                            'Due Upon Receipt' => '6',
+                                            'Net 15'           => '7',
+                                            'Net 30'           => '8',
+                                            'Net 60'           => '9'
+                                            };
+                                                PaymentTermsID = (pt != null && oldQBMap.containsKey(pt)) ? oldQBMap.get(pt) : '6';
+                                }
+                                
+                                // ---------- Bill Ref (CustomField) ----------
+                                
+                                string BillReference = (lo.Bill_Reference__c != null) ? lo.Bill_Reference__c : '';
+                                
+
+                                gen.writeFieldName('CustomField');
+                                gen.writeStartArray();
+                                gen.writeStartObject();
+                                gen.writeStringField('DefinitionId', '1' ); 
+                               
+                                gen.writeStringField('Name', 'Bill Ref' ); 
+                                gen.writeStringField('Type', 'StringType');
+                                gen.writeStringField('StringValue', BillReference );
+                                
+                                gen.writeEndObject();
+                                gen.writeEndArray();
+                                
+                                gen.writeFieldName('SalesTermRef');
+                                gen.writeStartObject();
+                                gen.writeStringField('value', PaymentTermsID);
+                                gen.writeEndObject();
+                                
+                                gen.writeStringField('SyncToken', synctoken);
+                                gen.writeFieldName('LinkedTxn'); gen.writeStartArray(); gen.writeEndArray();
+                                gen.writeStringField('Id', QBInvoiceID);
+                                gen.writeEndObject();
+                                
+                                String jsonPayload = gen.getAsString();
+                                System.debug(jsonPayload);
+                                HttpRequest updateReq = new HttpRequest();
+                                updateReq.setEndpoint('callout:'+NEWQB+'/invoice');
+                                updateReq.setHeader('Content-Type', 'application/json');
+                                updateReq.setMethod('POST');
+                                updateReq.setBody(jsonPayload);
+                                
+                                Http http = new Http();
+                                HttpResponse updateRes = http.send(updateReq);
+                                
+                                if (updateRes.getStatusCode() >= 200 && updateRes.getStatusCode() < 300) {
+                                    qbInvoiceid = qbi.ID;
+                                    if(lo.New_QB__c == True) updateLoad2(lo.Id,qbInvoiceid);
+                                    else updateLoad(lo.Id,qbInvoiceid);
+                                    
+                                    ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.CONFIRM, 'Invoice has been Updated on QB.'));
+                                } else {
+                                    ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.ERROR, 'Invoice could NOT be Updated in QB. Please contact your Administrator.'));
+                                    return null;
+                                }
+                            }
+                        }  
+                    }
+                    
+                    // ================= CREATE IF NOT FOUND =================
+                    else { 
+                        string Deliverydatestring;
+                        date DeliveryDate;
+                        if(lo.FreightTM__Delivery_Date__c != null) {
+                            DeliveryDate = lo.FreightTM__Delivery_Date__c;
+                            Deliverydatestring = string.valueof(DeliveryDate);
+                        } else {
+                            Deliverydatestring = '';
+                        }
+                        string TrackingNumber = (lo.FreightTM__Delivery_Remarks__c != null) ? lo.FreightTM__Delivery_Remarks__c : '';
+                        
+                        // ---- Terms on CREATE (prefer explicit QB ID, else map by New/Old) ----
+                        String PaymentTermsID;
+                        if(lo.FreightTM__Customer__r.Payment_Terms_QB_ID__c != null) {
+                            PaymentTermsID = lo.FreightTM__Customer__r.Payment_Terms_QB_ID__c;
+                        } else {
+                            String ptCreate = (lo.FreightTM__Customer__r.Payment_Terms__c != null)
+                                ? String.valueOf(lo.FreightTM__Customer__r.Payment_Terms__c).trim() : null;
+                            if (lo.New_QB__c == true) {
+                                Map<String, String> newQBMap = new Map<String, String>{
+                                        'Due Upon Receipt' => '6',
+                                            'Net 15'           => '7',
+                                            'Net 30'           => '8',
+                                            'Net 60'           => '9'
+                                        };
+                               PaymentTermsID = (ptCreate != null && newQBMap.containsKey(ptCreate)) ? newQBMap.get(ptCreate) : '6';
+                            } else {
+                                Map<String, String> oldQBMap = new Map<String, String>{
+                                        'Due Upon Receipt' => '6',
+                                            'Net 15'           => '7',
+                                            'Net 30'           => '8',
+                                            'Net 60'           => '9'
+                                        };
+                               PaymentTermsID = (ptCreate != null && oldQBMap.containsKey(ptCreate)) ? oldQBMap.get(ptCreate) : '6';
+                            }
+                        }
+                        
+                        string BillReference = (lo.Bill_Reference__c != null) ? lo.Bill_Reference__c : '';
+                        
+
+                        
+                        JSONGenerator gen = JSON.createGenerator(true); 
+                        gen.writeStartObject();
+                        
+                        // Bill Ref custom field
+                        gen.writeFieldName('CustomField');
+                        gen.writeStartArray();
+                        gen.writeStartObject();
+                        gen.writeStringField('DefinitionId', '1' );
+                     
+                        gen.writeStringField('Name', 'Bill Ref' ); 
+                        gen.writeStringField('Type', 'StringType');
+                        gen.writeStringField('StringValue', BillReference );
+                       
+                        gen.writeEndObject();
+                        gen.writeEndArray();
+                        
+                        gen.writeFieldName('SalesTermRef');
+                        gen.writeStartObject();
+                        gen.writeStringField('value', PaymentTermsID);
+                        gen.writeEndObject();
+                        
+                        // Lines
+                        gen.writeFieldName('Line');
+                        gen.writeStartArray();
+                        if (lo.FreightTM__Line_Items__r != null) {
+                            for(integer i = 0; i < lo.FreightTM__Line_Items__r.size(); i++) { 
+                                string QBIDstring;
+                                string QBName;
+                                if(lo.New_QB__c == True ) {
+                                    Id sfProductId = lo.FreightTM__Line_Items__r[i].Product__r.Id;
+                                    QBIDstring = sfProductIdToQBId.containsKey(sfProductId)
+                                        ? sfProductIdToQBId.get(sfProductId)
+                                        : (lo.FreightTM__Line_Items__r[i].Product__r.LQB_QB_Id__c != null
+                                            ? lo.FreightTM__Line_Items__r[i].Product__r.LQB_QB_Id__c
+                                        : '1');
+                                    QBName = (lo.FreightTM__Line_Items__r[i].Product__r.Name != null)
+                                                ? lo.FreightTM__Line_Items__r[i].Product__r.Name : 'Services';
+                                } else {
+                                    Id sfProductId = lo.FreightTM__Line_Items__r[i].Product__r.Id;
+                                    QBIDstring = sfProductIdToQBId.containsKey(sfProductId)
+                                        ? sfProductIdToQBId.get(sfProductId)
+                                        : (lo.FreightTM__Line_Items__r[i].Product__r.LQB_QB_Id__c != null
+                                            ? lo.FreightTM__Line_Items__r[i].Product__r.LQB_QB_Id__c
+                                        : '1');
+                                    QBName = (lo.FreightTM__Line_Items__r[i].Product__r.Name != null)
+                                                ? lo.FreightTM__Line_Items__r[i].Product__r.Name : 'Services';
+                                }
+                                
+                                decimal UnitPrice = (lo.FreightTM__Line_Items__r[i].FreightTM__Unit_Price__c != null)
+                                    ? lo.FreightTM__Line_Items__r[i].FreightTM__Unit_Price__c : 0;
+                                Double Quantity = (lo.FreightTM__Line_Items__r[i].FreightTM__Number_of_Units__c != null)
+                                    ? lo.FreightTM__Line_Items__r[i].FreightTM__Number_of_Units__c : 0;
+                                decimal TotalPrice = (lo.FreightTM__Line_Items__r[i].FreightTM__Amount__c != null)
+                                    ? lo.FreightTM__Line_Items__r[i].FreightTM__Amount__c : 0;
+                                
+                                string ContainerSize = (lo.FreightTM__Container_Size__c != null) ? lo.FreightTM__Container_Size__c : '';
+                                string PickupFacilityCity = (lo.FreightTM__PickupFacility__r.FreightTM__City__c != null) ? lo.FreightTM__PickupFacility__r.FreightTM__City__c : '';
+                                string PickupFacilitystate = (lo.FreightTM__PickupFacility__r.FreightTM__state__c != null) ? lo.FreightTM__PickupFacility__r.FreightTM__state__c : '';
+                                string DeliveryFacilityCity = (lo.FreightTM__DeliveryFacility__r.FreightTM__City__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__City__c : '';
+                                string DeliveryFacilitystate = (lo.FreightTM__DeliveryFacility__r.FreightTM__state__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__state__c : '';
+                                
+                                gen.writeStartObject();
+                                gen.writeStringField('Description', ContainerSize + ' - ' + PickupFacilityCity + ', ' + PickupFacilitystate + ' to ' + DeliveryFacilityCity + ', ' + DeliveryFacilitystate); 
+                                gen.writeNumberField('Amount', TotalPrice);
+                                gen.writeStringField('DetailType', 'SalesItemLineDetail');
+                                gen.writeFieldName('SalesItemLineDetail');
+                                gen.writeStartObject();
+                                gen.writeFieldName('ItemRef');
+                                gen.writeStartObject();
+                                gen.writeStringField('value', QBIDstring);
+                                gen.writeStringField('name', QBName );
+                                gen.writeEndObject();
+                                gen.writeNumberField('UnitPrice', UnitPrice ); 
+                                gen.writeNumberField('Qty', Quantity );
+                                gen.writeFieldName('TaxCodeRef');
+                                gen.writeStartObject();
+                                gen.writeStringField('value', 'NON' );
+                                gen.writeEndObject();
+                                gen.writeEndObject();
+                                gen.writeEndObject();
+                            }
+                        }
+                        gen.writeEndArray();
+                        
+                        // CustomerRef / Ship / Email
+                        string QBCustomerIDField = (lo.New_QB__c == True)
+                            ? lo.FreightTM__Customer__r.QBCustomerID__c
+                            : lo.FreightTM__Customer__r.QBCustomerID__c;
+                        string CustomerEmailAdd = (lo.FreightTM__Customer__r.Accounting_Email__c != null)
+                            ? lo.FreightTM__Customer__r.Accounting_Email__c : '';
+                        
+                        gen.writeFieldName('CustomerRef');
+                        gen.writeStartObject();
+                        gen.writeStringField('value', QBCustomerIDField );
+                        gen.writeEndObject();
+                        
+                        string ShippingName = (lo.FreightTM__DeliveryFacility__r.Name != null) ? lo.FreightTM__DeliveryFacility__r.Name : '';
+                        string ShippingStreet = (lo.FreightTM__DeliveryFacility__r.FreightTM__Street__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__Street__c : '';
+                        string ShippingState = (lo.FreightTM__DeliveryFacility__r.FreightTM__State__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__State__c : '';
+                        string ShippingCity = (lo.FreightTM__DeliveryFacility__r.FreightTM__City__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__City__c : '';
+                        string ShippingCountry = (lo.FreightTM__DeliveryFacility__r.FreightTM__Country__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__Country__c : '';
+                        string ShippingPostalCode = (lo.FreightTM__DeliveryFacility__r.FreightTM__Zip_Code__c != null) ? lo.FreightTM__DeliveryFacility__r.FreightTM__Zip_Code__c : '';
+                        
+                        gen.writeFieldName('ShipAddr');
+                        gen.writeStartObject();
+                        gen.writeStringField('Line1', ShippingName );
+                        gen.writeStringField('Line2', ShippingStreet );
+                        gen.writeStringField('City', ShippingCity );
+                        gen.writeStringField('CountrySubDivisionCode', ShippingState );
+                        gen.writeStringField('PostalCode', ShippingPostalCode);
+                        gen.writeStringField('Country', ShippingCountry);
+                        gen.writeEndObject();
+                        
+                        gen.writeFieldName('BillEmail');
+                        gen.writeStartObject();
+                        gen.writeStringField('Address', CustomerEmailAdd );
+                        gen.writeEndObject();
+                        
+                        gen.writeStringField('DocNumber', lo.name );
+                        gen.writeEndObject();
+                        
+                        String jsonS = gen.getAsString();
+                        System.debug(jsonS);
+                        HttpRequest req = new HttpRequest();
+                        req.setEndpoint('callout:'+NEWQB+'/invoice');
+                        req.setHeader('Content-Type','application/json'); 
+                        req.setMethod('POST');
+                        req.setTimeout(2000);
+                        req.setbody(jsonS);
+                        
+                        Http http = new Http();
+                        HTTPResponse res = http.send(req);    
+                        
+                        System.debug(res);
+                        if(lo.New_QB__c == True) {
+                            if ((res.getStatusCode() >= 200 && res.getStatusCode() < 300) && (lo.New_QuickBooks_ID__c == null || lo.New_QuickBooks_ID__c == '')) {
+                                HttpRequest reqinv2 = new HttpRequest();
+                                reqinv2.setEndpoint('callout:'+NEWQB+'/query?query=select%20%2a%20from%20Invoice%20where%20DocNumber%20%3d%20%27'+ lo.name +'%27');
+                                reqinv2.setHeader('Accept','application/json');
+                                reqinv2.setMethod('GET');
+                                reqinv2.setTimeout(2000);
+                                
+                                Http httpinv2 = new Http();
+                                HTTPResponse resinv2 = httpinv2.send(reqinv2);    
+                                
+                                String invbod = resinv2.getBody();
+                                String invbod2 = invbod.replace('"BillAddr":', '"BillAddr_i":');
+                                String invbod3 = invbod2.replace('"QueryResponse":', '"QueryResponse_i":');
+                                String invbod4 = invbod3.replace('"MetaData":', '"MetaData_i":');
+                                String invbod5 = invbod4.replace('"CurrencyRef":', '"CurrencyRef_i":');
+                                String invbod_x = invbod5.replace('"time":', '"time_i":');
+                                system.debug('III: ' + invbod_x);
+                                
+                                if (resinv2.getStatusCode() >= 200 && resinv2.getStatusCode() < 300) {
+                                    InvoiceControllerUpdate.Inv invt2 = (InvoiceControllerUpdate.Inv)JSON.deserialize(invbod_x, InvoiceControllerUpdate.Inv.class);
+                                    QueryResponse_i v2 = invt2.QueryResponse_i;
+                                    List<Invoice> invlist2 = v2.Invoice;
+                                    if (!Test.isRunningTest()) {
+                                        for(Invoice qbc : invlist2) {
+                                            qbInvoiceid = qbc.ID;
+                                            updateLoad2(lo.Id,qbInvoiceid);
+                                            ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.CONFIRM, 'Invoice has been added to QB.'));
+                                        }
+                                    }
+                                }
+                            } else {
+                                ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.ERROR,
+                                  'Invoice could NOT be created in QB. Please contact your Administrator.'));
+                                return null;
+                            }
+                        } else {
+                            if ((res.getStatusCode() >= 200 && res.getStatusCode() < 300) && (lo.LQB_QB_Id__c == null || lo.LQB_QB_Id__c == '')) {
+                                HttpRequest reqinv2 = new HttpRequest();
+                                reqinv2.setEndpoint('callout:'+NEWQB+'/query?query=select%20%2a%20from%20Invoice%20where%20DocNumber%20%3d%20%27'+ lo.name +'%27');
+                                reqinv2.setHeader('Accept','application/json');
+                                reqinv2.setMethod('GET');
+                                reqinv2.setTimeout(2000);
+                                
+                                Http httpinv2 = new Http();
+                                HTTPResponse resinv2 = httpinv2.send(reqinv2);    
+                                
+                                String invbod = resinv2.getBody();
+                                String invbod2 = invbod.replace('"BillAddr":', '"BillAddr_i":');
+                                String invbod3 = invbod2.replace('"QueryResponse":', '"QueryResponse_i":');
+                                String invbod4 = invbod3.replace('"MetaData":', '"MetaData_i":');
+                                String invbod5 = invbod4.replace('"CurrencyRef":', '"CurrencyRef_i":');
+                                String invbod_x = invbod5.replace('"time":', '"time_i":');
+                                system.debug('III: ' + invbod_x);
+                                
+                                if (resinv2.getStatusCode() >= 200 && resinv2.getStatusCode() < 300) {
+                                    InvoiceControllerUpdate.Inv invt2 = (InvoiceControllerUpdate.Inv)JSON.deserialize(invbod_x, InvoiceControllerUpdate.Inv.class);
+                                    QueryResponse_i v2 = invt2.QueryResponse_i;
+                                    List<Invoice> invlist2 = v2.Invoice;
+                                    if (!Test.isRunningTest()) {
+                                        for(Invoice qbc : invlist2) {
+                                            qbInvoiceid = qbc.ID;
+                                            updateLoad(lo.Id,qbInvoiceid);
+                                            ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.CONFIRM, 'Invoice has been added to QB.'));
+                                        }
+                                    }
+                                }
+                            } else {
+                                ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.ERROR, 
+                                   'Invoice could NOT be created in QB. Please contact your Administrator.'));
+                                return null;
+                            }
+                        }
+                    }
+                } else {
+                    ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.error, 'There was a query issue in QB. Please contact your Administrator.')); 
+                }
+            }
+            if (!sfProductIdToQBId.isEmpty()) {
+               updateProductsQBId(sfProductIdToQBId); // @future
+            }
+        }
+        catch(DmlException ex){
+            // ApexPages.addMessages(ex);
+        }
+        return null;
+    }
+    
+    public String getName() {
+        return 'InvoiceController';
+    }
+    
+    private static void updateLoad(Id Loadid,String qbInvoiceid) {
+        FreightTM__Load__c Loadrecupdate = new FreightTM__Load__c(Id = Loadid,Invoice_Sent_to_QB__c = true,LQB_QB_Id__c =qbInvoiceid,LQB_QB_Error__c = 'Success');
+        update Loadrecupdate;
+    }
+    
+    private static void updateLoad2(Id Loadid,String qbInvoiceid) {
+        FreightTM__Load__c Loadrecupdate2 = new FreightTM__Load__c(Id = Loadid,Invoice_Sent_to_QB__c = true,New_QuickBooks_ID__c =qbInvoiceid,LQB_QB_Error__c = 'Success');
+        update Loadrecupdate2;
+    }
+}
