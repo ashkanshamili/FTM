@@ -1,0 +1,30 @@
+<apex:page controller="DatPostLoadController">
+    <apex:form>
+        <apex:pageBlock title="Load Details">
+            <apex:pageBlockTable value="{!loadDetailsList}" var="load">
+                <apex:column headerValue="Origin">
+                    <apex:outputText value="{!load.originCity}, {!load.originState}, {!load.originPostalCode}" />
+                </apex:column>
+                <apex:column headerValue="Destination">
+                    <apex:outputText value="{!load.destinationCity}, {!load.destinationState}, {!load.destinationPostalCode}" />
+                </apex:column>
+                <apex:column headerValue="Weight (Pounds)">
+                    <apex:outputText value="{!load.weightPounds}" />
+                </apex:column>
+                <apex:column headerValue="Type of Equipment">
+                    <apex:outputText value="{!load.equipmentType}" />
+                </apex:column>
+
+                <!-- NEW: DAT exposure window -->
+                <apex:column headerValue="Check-In">
+                    <apex:outputText value="{!load.earliestAvailabilityWhenFmt}" />
+                </apex:column>
+                <apex:column headerValue="Check-Out">
+                    <apex:outputText value="{!load.latestAvailabilityWhenFmt}" />
+                </apex:column>
+                <!-- END OF NEW: DAT exposure window -->
+
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

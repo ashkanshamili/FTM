@@ -1,0 +1,29 @@
+<apex:page controller="PostLoadDat2Controller">
+    <apex:form id="f">
+
+        <!-- This creates the JS function `doDeleteLoad()` that calls your Apex -->
+        <apex:actionFunction name="doDeleteLoad" action="{!executeDeleteLoad}" rerender="resultPanel,msgs" />
+
+        <apex:pageBlock title="Post / Update / Delete Load to DAT">
+            <apex:pageBlockButtons location="top">
+                <!-- Post Load button -->
+                <apex:commandButton value="Post Load" action="{!executePostLoad}" rerender="resultPanel,msgs" />
+
+                <!-- show Update only if a DAT post already exists -->
+                <apex:commandButton value="Update Load" action="{!executeUpdateLoad}" rerender="resultPanel,msgs" rendered="{!NOT(ISBLANK(datPostId))}"
+                />
+
+                <!-- Delete only if a DAT post already exists -->
+                <apex:commandButton value="Delete Load" rendered="{!NOT(ISBLANK(datPostId))}" onclick="if (confirm('Delete this DAT post? This cannot be undone.')) { doDeleteLoad(); } return false;"
+                />
+
+            </apex:pageBlockButtons>
+
+            <apex:pageMessages id="msgs" />
+
+            <apex:outputPanel id="resultPanel">
+                <apex:outputText value="{!result}" rendered="{!NOT(ISNULL(result))}" escape="false" />
+            </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

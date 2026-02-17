@@ -1,0 +1,13 @@
+<apex:page standardController="FreightTM__Load__c" extensions="MacropointOrdersRestAPI" action="{!sendOrder}">
+    <apex:pageMessages id="showmsg"></apex:pageMessages>
+    <apex:form>
+        <apex:commandButton value="Cancel" oncomplete="doRedirect();" />
+    </apex:form>
+    <script type="text/javascript">
+        function doRedirect() {
+            window.history.back();
+        }
+
+    </script>
+
+</apex:page>
