@@ -1,0 +1,431 @@
+public class QuickBooksCarrierRate{
+    
+    public string Termss;
+    public Carrier_Rate__c Car {get; set;}
+    public id CarId {get; set;}
+    public id loadId {get; set;}
+    public string qbcarrierid;
+    public string qbbillid;
+    public string msg;
+    public integer taxcodeid;
+    public List<Customer> clist;
+    public string cname;//for unit test
+    public string cnames;//for unit test
+    public string cnames2;//for unit test
+    public string invbody3;//for unit test
+    public string invbody_x;//for unit test
+    public date Billon;
+    
+    public Bill bill { get; set; }
+    public String time_i { get; set; }
+    
+    // ====== QBO helper types ======
+    public class MetaData_i { public String CreateTime { get; set; } public String LastUpdatedTime { get; set; } }
+    public class CurrencyRef_i { public String value { get; set; } public String name { get; set; } }
+    
+    public class Line {
+        public String Id { get; set; }
+        public Integer LineNum { get; set; }
+        public String Description {get;set;} 
+        public List<LinkedTxn> LinkedTxn {get;set;} 
+        public Double Amount { get; set; }
+        public String DetailType { get; set; }
+        public ItemBasedExpenseLineDetail ItemBasedExpenseLineDetail { get; set; }
+    }
+    
+    public class ItemBasedExpenseLineDetail {
+        public String BillableStatus { get; set; }
+        public ItemRef ItemRef { get; set; }
+        public Double UnitPrice { get; set; }
+        public Double Qty { get; set; }
+        public TaxCodeRef TaxCodeRef { get; set; }
+    }
+    
+    public class ItemRef { public String value { get; set; } public String name { get; set; } }
+    public class TaxCodeRef { public String value { get; set; } }
+    public class VendorRef { public String value { get; set; } public String name { get; set; } }
+    public class APAccountRef { public String value { get; set; } public String name { get; set; } }
+    
+    public class CurrencyRef { public String value; public String name; }
+    public class PrimaryPhone { public String FreeFormNumber; }
+    
+    public class BillEmail { public String Address; }
+    public class DeliveryInfo { public String DeliveryType; public String DeliveryTime; }
+    
+    public class SalesItemLineDetail {
+        public CurrencyRef ItemRef;
+        public Double UnitPrice;
+        public Double Qty;
+        public CurrencyRef ItemAccountRef;
+        public TaxCodeRef TaxCodeRef;
+    }
+    
+    public class Inv {
+        public Bill Bill;
+        public QueryResponse_i QueryResponse_i;
+        public String time_i;
+    }
+    
+    public class QueryResponse_i {
+        public List<Bill> Bill;
+        public Integer startPosition;
+        public Integer maxResults;
+        public Integer totalCount;
+    }
+    
+    public class CustomField {
+        public String DefinitionId;
+        public String Type_Z; // in json: Type
+        public String Name;
+        public String StringValue;
+    }
+    
+    public class LinkedTxn { public String TxnId; public String TxnType; }
+    
+    public class Bill {
+        public String DueDate {get;set;} 
+        public Double Balance {get;set;} 
+        public String domain {get;set;} 
+        public Boolean sparse {get;set;} 
+        public String Id {get;set;} 
+        public String SyncToken {get;set;} 
+        public MetaData MetaData {get;set;} 
+        public MetaData_i MetaData_i;
+        public String TxnDate {get;set;} 
+        public List<CustomField> CustomField;
+        public CurrencyRef CurrencyRef {get;set;} 
+        public List<Line> Line {get;set;} 
+        public CurrencyRef VendorRef {get;set;} 
+        public CurrencyRef APAccountRef {get;set;} 
+        public Double TotalAmt {get;set;} 
+        public String DocNumber;
+    }
+    
+    public class Line_Y { public String Id; public Integer LineNum; public Double Amount; public String DetailType; public SalesItemLineDetail SalesItemLineDetail; public CustomField SubTotalLineDetail; }
+    public class Line_X { public String Id; public Integer LineNum; public Double Amount; public String DetailType; public SalesItemLineDetail SalesItemLineDetail; public CustomField SubTotalLineDetail; }
+    public class Line_W { public String Id; public Integer LineNum; public Double Amount; public String DetailType; public SalesItemLineDetail SalesItemLineDetail; public CustomField SubTotalLineDetail; }
+    
+    public class AccountBasedExpenseLineDetail {
+        public CurrencyRef AccountRef {get;set;} 
+        public String BillableStatus {get;set;} 
+        public LastModifiedByRef TaxCodeRef {get;set;} 
+    }
+    public class Cust { public QueryResponse QueryResponse {get;set;} public String time_x {get;set;} }
+    
+    public class Line_Z { public String Id; public Integer LineNum; public Double Amount; public String DetailType; public SalesItemLineDetail SalesItemLineDetail; public CustomField SubTotalLineDetail; }
+    public class LastModifiedByRef { public String value {get;set;} }
+    public class MetaData { public String CreateTime {get;set;} public LastModifiedByRef LastModifiedByRef {get;set;} public String LastUpdatedTime {get;set;} }
+    public class QueryResponse { public List<Bill> Bill {get;set;} public Integer startPosition {get;set;} public Integer maxResults {get;set;} public Integer totalCount {get;set;} }
+    
+    public QuickBooksCarrierRate(ApexPages.StandardController stdController) {
+        carId = ApexPages.currentPage().getParameters().get('id');
+        clist = new List<Customer>();
+        
+        Car = [
+            select Id, Name, Accessorials__c,Balance_Due__c,Bill_Due__c,Bill_Due_2__c,Bill_Due_3__c,Bill_Reference__c,Billed_On__c,Billed_Status__c,
+            Carrier__c,Files__c,Credit_Limit_Net_days__c,Days_after_Bill_On__c,Extra_Charges__c,Fulfillment__c,Load_ID__c,Load_ID__r.NEW_QB__c,Load_Id_Name__c,NOA__c,
+            Overpayment__c,Partial_Payment__c,Payment_Date__c,Payment_Date_2__c,Payment_Method__c,Payment_Reference__c,Payment_Schedule__c,PRO__c,
+            PU__c,LQB_QB_Company__c,LQB_QB_Id__c,LQB_QB_No__c,LQB_QB_Seq__c,LQB_QB_Error__c,Rate__c,Remaining_Balance_Due__c,Type__c,Carrier__r.Payment_Terms__c,Carrier__r.Payment_Terms_QB_ID__c,
+            Carrier__r.LQB_QB_Id__c,Product__r.LQB_QB_Id__c,Carrier__r.LQB_QB_Id2__c,Product__r.LQB_QB_Id2__c,Product__r.name,Product__c,Carrier__r.FreightTM__Billing_Address__c,Carrier__r.FreightTM__Billing_City__c,
+            Carrier__r.FreightTM__Billing_State_Province__c,Carrier__r.FreightTM__Billing_Zip_Code__c,Carrier__r.FreightTM__Billing_Country__c,New_QuickBooks_ID__c
+            from Carrier_Rate__c 
+            where id =: carId
+        ];
+    }
+    
+    // create/update Bill in QB
+    public PageReference send() {
+        try{ 
+            if(Car.Carrier__c == null || (Car.Carrier__r.LQB_QB_Id__c == null && Car.Load_ID__r.New_QB__c == false)) {
+                ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.Error, 'Missing Old Carrier QB ID.'));
+                return null;	
+            } else if(Car.Carrier__c == null || (Car.Carrier__r.LQB_QB_Id2__c == null && Car.Load_ID__r.New_QB__c == true)){
+                ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.Error, 'Missing NEW Carrier QB ID. Please check the Assigned Carrier'));
+                return null;	
+            } else {
+                string NEWQB ='';
+                string CarRateID ='';
+                if(Car.Load_ID__r.New_QB__c == True) {
+                    NEWQB = 'QuickBooks2';
+                    CarRateID = Car.New_QuickBooks_ID__c;
+                } else {
+                    NEWQB = 'QuickBooks';
+                    CarRateID = Car.LQB_QB_Id__c;
+                }
+                
+                // ===================== CREATE =====================
+                if (String.isBlank(CarRateID)) {
+                    datetime timenow =  DateTime.now();
+                    String formattedDateTime = timenow.format('yyyy-MM-dd');
+                    
+                    String PaymentTermsID;
+                    if(Car.Carrier__r.Payment_Terms_QB_ID__c != null) {
+                        PaymentTermsID = Car.Carrier__r.Payment_Terms_QB_ID__c;
+                    } else {
+                        PaymentTermsID = '1';
+                    }
+                    
+                    JSONGenerator gen = JSON.createGenerator(true); 
+                    gen.writeStartObject(); // {
+                    
+                    // ----------- CustomField: Bill Ref -----------
+                    gen.writeFieldName('CustomField');
+                    gen.writeStartArray();
+                    gen.writeStartObject();
+                    gen.writeStringField('DefinitionId', '1');
+                    gen.writeStringField('Name', 'Bill Ref');
+                    gen.writeStringField('Type', 'StringType');
+                    gen.writeStringField('StringValue', (Car.Bill_Reference__c == null ? '' : Car.Bill_Reference__c));
+                    gen.writeEndObject();
+                    gen.writeEndArray();
+                    
+                    // ----------- Line -----------
+                    gen.writeFieldName('Line');
+                    gen.writeStartArray();
+                    
+                    String QBIDstring;
+                    if(Car.Load_ID__r.New_QB__c == True ) {
+                        QBIDstring = (Car.Product__c != null && Car.Product__r.LQB_QB_Id2__c != null) ? Car.Product__r.LQB_QB_Id2__c : '1';
+                    } else {
+                        QBIDstring = (Car.Product__c != null && Car.Product__r.LQB_QB_Id__c  != null) ? Car.Product__r.LQB_QB_Id__c  : '1';
+                    }
+                    
+                    gen.writeStartObject();
+                    gen.writeNumberField('Amount', Car.Rate__c);
+                    gen.writeStringField('DetailType', 'ItemBasedExpenseLineDetail');
+                    gen.writeFieldName('ItemBasedExpenseLineDetail');
+                    gen.writeStartObject();
+                    gen.writeStringField('BillableStatus', 'NotBillable');
+                    gen.writeFieldName('ItemRef');
+                    gen.writeStartObject();
+                    gen.writeStringField('value', QBIDstring);
+                    gen.writeEndObject();
+                    gen.writeNumberField('UnitPrice', Car.Rate__c);
+                    gen.writeNumberField('Qty', 1);
+                    gen.writeEndObject(); // ItemBasedExpenseLineDetail
+                    gen.writeEndObject(); // Line[0]
+                    
+                    gen.writeEndArray(); // Line
+                    
+                    // ----------- Terms -----------
+                    gen.writeFieldName('SalesTermRef');
+                    gen.writeStartObject();
+                    gen.writeStringField('value', PaymentTermsID);
+                    gen.writeEndObject();
+                    
+                    // ----------- VendorRef -----------
+                    String CarrierID = (Car.Load_ID__r.New_QB__c == True) ? Car.Carrier__r.LQB_QB_Id2__c : Car.Carrier__r.LQB_QB_Id__c;
+                    gen.writeFieldName('VendorRef');
+                    gen.writeStartObject();
+                    gen.writeStringField('value', CarrierID);
+                    gen.writeEndObject();
+                    
+                    // ----------- Header fields -----------
+                    gen.writeStringField('DocNumber', Car.Load_Id_Name__c);
+                    gen.writeStringField('TxnDate', formattedDateTime);
+                    
+                    gen.writeEndObject(); // }
+                    
+                    String jsonS = gen.getAsString();
+                    System.debug(jsonS);
+                    
+                    HttpRequest req = new HttpRequest();
+                    req.setEndpoint('callout:'+NEWQB+'/bill');
+                    req.setHeader('Content-Type','application/json'); 
+                    req.setHeader('Accept', 'application/json');
+                    req.setMethod('POST');
+                    req.setTimeout(2000);
+                    req.setbody(jsonS);
+                    
+                    Http http = new Http();
+                    HTTPResponse res = http.send(req);    
+                    
+                    System.debug(res);
+                    String invbody = res.getBody();
+                    system.debug(invbody);
+                    
+                    String invbody2 = invbody.replace('"BillAddr":', '"BillAddr_i":');
+                    String invbody3 = invbody2.replace('"Bill":', '"Bill":'); 
+                    String invbody4 = invbody3.replace('"MetaData":', '"MetaData_i":');
+                    String invbody5 = invbody4.replace('"CurrencyRef":', '"CurrencyRef_i":');
+                    String invbody_x = invbody5.replace('"time":', '"time_i":');
+                    system.debug('III: ' + invbody_x);
+                    
+                    if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
+                        QuickBooksCarrierRate.Inv invt = (QuickBooksCarrierRate.Inv)JSON.deserialize(invbody_x, QuickBooksCarrierRate.Inv.class);
+                        bill v = invt.bill;
+                        
+                        if(v != null) { 
+                            qbBillid = v.ID;
+                            Billon = Date.today();
+                            if(Car.Load_ID__r.New_QB__c == True ) {
+                                updateCarrierRate2(Car.Id,qbBillid,Billon);
+                            } else {
+                                updateCarrierRate(Car.Id,qbBillid,Billon);
+                            }
+                            ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.Confirm, 'Carrier Rate has been created in QB.'));
+                        }
+                    } else {
+                        ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.ERROR, 'Carrier Rate could NOT be created in QB. Please contact your Administrator.'));
+                    }
+                }
+                // ===================== UPDATE =====================
+                else {
+                    JSONGenerator geni = JSON.createGenerator(true); 
+                    String invoicestr = geni.getAsString();
+                    
+                    HttpRequest reqinv = new HttpRequest();
+                    reqinv.setEndpoint('callout:'+NEWQB+'/query?query=select%20%2a%20from%20bill%20where%20Id%20%3d%20%27'+ CarRateID +'%27');
+                    reqinv.setHeader('Accept','application/json');
+                    reqinv.setMethod('GET');
+                    reqinv.setTimeout(2000);
+                    reqinv.setBody(invoicestr);
+                    
+                    Http httpinv = new Http();
+                    HTTPResponse resinv = httpinv.send(reqinv);    
+                    String invbody = resinv.getBody();
+                    system.debug(invbody);
+                    
+                    String invbody2 = invbody.replace('"BillAddr":', '"BillAddr_i":');
+                    String invbody3 = invbody2.replace('"QueryResponse":', '"QueryResponse_i":');
+                    String invbody4 = invbody3.replace('"MetaData":', '"MetaData_i":');
+                    String invbody5 = invbody4.replace('"CurrencyRef":', '"CurrencyRef_i":');
+                    String invbody_x = invbody5.replace('"time":', '"time_i":');
+                    system.debug('III: ' + invbody_x);
+                    
+                    if (resinv.getStatusCode() >= 200 && resinv.getStatusCode() < 300) {
+                        QuickBooksCarrierRate.Inv invt = (QuickBooksCarrierRate.Inv)JSON.deserialize(invbody_x, QuickBooksCarrierRate.Inv.class);
+                        QueryResponse_i v = invt.QueryResponse_i;
+                        List<Bill> invlist = v.Bill;
+                        
+                        if(invlist != null) { 
+                            for(Bill qbi : invlist) {
+                                String synctoken = qbi.SyncToken;
+                                String QBInvoiceID = qbi.ID;
+                                String QBInvoiceDate = qbi.TxnDate;
+                                
+                                String PaymentTermsID;
+                                if(Car.Carrier__r.Payment_Terms_QB_ID__c != null) {
+                                    PaymentTermsID = Car.Carrier__r.Payment_Terms_QB_ID__c;
+                                } else {
+                                    PaymentTermsID = '1';
+                                }
+                                
+                                JSONGenerator gen = JSON.createGenerator(true);
+                                gen.writeStartObject();
+                                
+                                // Header
+                                gen.writeStringField('DocNumber', Car.Load_Id_Name__c);
+                                gen.writeStringField('SyncToken', synctoken);
+                                gen.writeStringField('domain', 'QBO');
+                                gen.writeStringField('Id', QBInvoiceID);
+                                
+                                // ----------- CustomField: Bill Ref (UPDATE) -----------
+                                gen.writeFieldName('CustomField');
+                                gen.writeStartArray();
+                                gen.writeStartObject();
+                                gen.writeStringField('DefinitionId', '1');
+                                gen.writeStringField('Name', 'Bill Ref');
+                                gen.writeStringField('Type', 'StringType');
+                                gen.writeStringField('StringValue', (Car.Bill_Reference__c == null ? '' : Car.Bill_Reference__c));
+                                gen.writeEndObject();
+                                gen.writeEndArray();
+                                
+                                // Terms
+                                gen.writeFieldName('SalesTermRef');
+                                gen.writeStartObject();
+                                gen.writeStringField('value', PaymentTermsID);
+                                gen.writeEndObject();
+                                
+                                // VendorRef
+                                String CarrierID = (Car.Load_ID__r.New_QB__c == True) ? Car.Carrier__r.LQB_QB_Id2__c : Car.Carrier__r.LQB_QB_Id__c;
+                                gen.writeFieldName('VendorRef');
+                                gen.writeStartObject();
+                                gen.writeStringField('value', CarrierID);
+                                gen.writeEndObject();
+                                
+                                // Totals (optional)
+                                gen.writeNumberField('TotalAmt', Car.Rate__c);
+                                
+                                // Lines
+                                gen.writeFieldName('Line');
+                                gen.writeStartArray();
+                                
+                                String QBIDstring;
+                                if(Car.Load_ID__r.New_QB__c == True ) {
+                                    QBIDstring = (Car.Product__c != null && Car.Product__r.LQB_QB_Id2__c != null) ? Car.Product__r.LQB_QB_Id2__c : '1';
+                                } else {
+                                    QBIDstring = (Car.Product__c != null && Car.Product__r.LQB_QB_Id__c  != null) ? Car.Product__r.LQB_QB_Id__c  : '1';
+                                }
+                                
+                                gen.writeStartObject();
+                                gen.writeNumberField('Amount', Car.Rate__c);
+                                gen.writeStringField('DetailType', 'ItemBasedExpenseLineDetail');
+                                gen.writeFieldName('ItemBasedExpenseLineDetail');
+                                gen.writeStartObject();
+                                gen.writeStringField('BillableStatus', 'NotBillable');
+                                gen.writeFieldName('ItemRef');
+                                gen.writeStartObject();
+                                gen.writeStringField('value', QBIDstring);
+                                gen.writeEndObject();
+                                gen.writeNumberField('UnitPrice', Car.Rate__c);
+                                gen.writeNumberField('Qty', 1);
+                                gen.writeEndObject(); // ItemBasedExpenseLineDetail
+                                gen.writeEndObject(); // Line[0]
+                                
+                                gen.writeEndArray(); // Line
+                                
+                                gen.writeEndObject();
+                                
+                                String jsonPayload = gen.getAsString();
+                                System.debug(jsonPayload);
+                                
+                                HttpRequest updateReq = new HttpRequest();
+                                updateReq.setEndpoint('callout:'+NEWQB+'/bill');
+                                updateReq.setHeader('Content-Type','application/json'); 
+                                updateReq.setHeader('Accept', 'application/json');
+                                updateReq.setMethod('POST');
+                                updateReq.setBody(jsonPayload);
+                                
+                                Http http = new Http();
+                                HttpResponse updateRes = http.send(updateReq);
+                                String invbodyt = updateRes.getBody();
+                                system.debug(invbodyt);
+                                
+                                if (updateRes.getStatusCode() >= 200 && updateRes.getStatusCode() < 300) {
+                                    qbBillid = QBInvoiceID;
+                                    Date dateValue = (QBInvoiceDate == null ? Date.today() : Date.valueOf(QBInvoiceDate));
+                                    Billon = dateValue;
+                                    if(Car.Load_ID__r.New_QB__c == True ) {
+                                        updateCarrierRate2(Car.Id,qbBillid,Billon);
+                                    } else {
+                                        updateCarrierRate(Car.Id,qbBillid,Billon);
+                                    }
+                                    ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.CONFIRM, 'Carrier Rate/Bill has been Updated on QB.'));
+                                } else {
+                                    ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.ERROR, 'Carrier Rate/Bill could NOT be Updated in QB. Please contact your Administrator.'));
+                                }
+                            }
+                        }
+                    } else {
+                        ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.error, 'There was a query issue in QB for getting the Carrier Rate. Please contact your Administrator.')); 
+                    }
+                }
+            }
+        } catch(DmlException ex){
+            ApexPages.addMessages(ex);
+        }
+        return null;
+    }
+    
+    public String getName() { return 'QuickBooksCarrierRate'; }
+    
+    private static void updateCarrierRate(Id CarID,String qbBillid, date Billon) {
+        Carrier_Rate__c Loadrecupdate = new Carrier_Rate__c(Id = CarID,LQB_QB_Id__c =qbBillid,LQB_QB_Error__c = 'Success',Billed_On__c = Billon);
+        update Loadrecupdate;
+    }
+    private static void updateCarrierRate2(Id CarID,String qbBillid, date Billon) {
+        Carrier_Rate__c Loadrecupdate2 = new Carrier_Rate__c(Id = CarID,New_QuickBooks_ID__c =qbBillid,LQB_QB_Error__c = 'Success',Billed_On__c = Billon);
+        update Loadrecupdate2;
+    }
+}

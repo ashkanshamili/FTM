@@ -1,0 +1,669 @@
+public class QuickBooksCarrierCreatorUpdater {
+public string Termss;
+    public FreightTM__Carrier__c Ca {get; set;}
+    public id CaID {get; set;}
+    //public Account acct {get; set;}
+    //public Boolean cid {get; set;}
+    public string qbCarrierid;
+    public string msg;
+    public integer taxcodeid;
+    //public id loadid {get; set;} //for unit test
+    public List<Vendor> clist;
+    public List<Vendor> clist2;
+    public string cnam;//for unit test
+    public string cname;//for unit test
+    public string cnames;//for unit test
+    public string cnames2;//for unit test
+    public string invbody3;//for unit test
+    public string invbody_x;//for unit test
+    
+    //Apex classes from QB Customer Object
+    public class BillAddr {
+        public String Id;
+        public String Line1;
+        public String City;
+        public string Country;
+        public String CountrySubDivisionCode;
+        public String PostalCode;
+        //public String Lat; 
+        //public String Long_Z; //in json: Long
+    }
+    
+    public class CurrencyRef {
+        public String value;
+        public String name;
+    }
+    public class Cust { //this needs to be in a class for json deserialization to work
+        public QueryResponse QueryResponse;
+        public String time_x; //time is an apex reserved word, replaced it with time_x in the response string
+    }
+    public class PrimaryPhone {
+        public String FreeFormNumber;
+    }
+    public class Customer {
+        public Boolean Taxable;
+        public BillAddr BillAddr;
+        //public BillAddr ShipAddr; 
+        public Boolean Job;
+        public Boolean BillWithParent;
+        public Double Balance;
+        public Double BalanceWithJobs;
+        public CurrencyRef CurrencyRef;
+        public String PreferredDeliveryMethod;
+        public String domain;
+        public Boolean sparse;
+        public String Id;
+        public String SyncToken;
+        public MetaData MetaData;
+        public String GivenName;
+        public String FamilyName;
+        public String FullyQualifiedName;
+        public String CompanyName;
+        public String DisplayName;
+        public String PrintOnCheckName;
+        public Boolean Active;
+        public PrimaryPhone PrimaryPhone;
+        //public PrimaryEmailAddr PrimaryEmailAddr;
+    }
+    public class Vendor {
+        public Boolean Taxable;
+        public BillAddr BillAddr;
+        //public BillAddr ShipAddr; 
+        public Boolean Job;
+        public Boolean BillWithParent;
+        public Double Balance;
+        public Double BalanceWithJobs;
+        public CurrencyRef CurrencyRef;
+        public String PreferredDeliveryMethod;
+        public String domain;
+        public Boolean sparse;
+        public String Id;
+        public String SyncToken;
+        public MetaData MetaData;
+        public String GivenName;
+        public String FamilyName;
+        public String FullyQualifiedName;
+        public String CompanyName;
+        public String DisplayName;
+        public String PrintOnCheckName;
+        public Boolean Active;
+        public PrimaryPhone PrimaryPhone;
+        //public PrimaryEmailAddr PrimaryEmailAddr;
+    }
+    
+    public class MetaData {
+        public String CreateTime;
+        public String LastUpdatedTime;
+    }
+    public class QueryResponse {
+        public List<Vendor> Vendor; 
+        public Integer startPosition;
+        public Integer maxResults;
+    }
+    //public class PrimaryEmailAddr {
+        //public String Address;
+    //}
+    //end QB Customer Object classes
+    
+    //Apex classes from QB Invoice Object
+    public class BillAddr_i { //rename to avoid duplicate class
+        public String Id;
+        public String Line1;
+        public String Line2;
+        public String City;
+        public String Country;
+        public String CountrySubDivisionCode;
+        public String PostalCode;
+        public String Lat;
+        public String Long_Z; // in json: Long
+    }
+    public class CurrencyRef_i {
+        public String value;
+        public String name;
+    }
+    public class Invoice {
+        public Integer Deposit;
+        public Boolean AllowIPNPayment;
+        public Boolean AllowOnlinePayment;
+        public Boolean AllowOnlineCreditCardPayment;
+        public Boolean AllowOnlineACHPayment;
+        public String EInvoiceStatus;
+        public String ECloudStatusTimeStamp;
+        public String domain;
+        public Boolean sparse;
+        public String Id;
+        public String SyncToken;
+        public MetaData_i MetaData_i;
+        public List<CustomField> CustomField;
+        public String DocNumber;
+        public String TxnDate;
+        public CurrencyRef_i CurrencyRef_i;
+        //public Integer ExchangeRate;
+        public List<LinkedTxn> LinkedTxn;
+        public List<Line> Line;
+        //public TxnTaxDetail TxnTaxDetail; //
+        public CurrencyRef CustomerRef;
+        public TaxCodeRef CustomerMemo; //
+        public BillAddr_i BillAddr_i;
+        //public BillAddr ShipAddr;
+        public TaxCodeRef SalesTermRef; //
+        public String DueDate;
+        //public String GlobalTaxCalculation; //
+        public Double TotalAmt;
+        public Double HomeTotalAmt;
+        public Boolean ApplyTaxAfterDiscount; //USA
+        public String PrintStatus;
+        public String EmailStatus;
+        public BillEmail BillEmail;
+        public Double Balance; //use Double instead of Integer, otherwise errors with decimals
+        //public Double HomeBalance;
+        public DeliveryInfo DeliveryInfo;
+        public BillAddr_Z ShipAddr;
+    }
+    public class BillEmail {
+        public String Address;
+    }
+    public class DeliveryInfo {
+        public String DeliveryType;
+        public String DeliveryTime;
+    }
+    public class BillAddr_Z {
+        public String Id;
+        public String Line1;
+        public String Line2;
+        public String City;
+        public String CountrySubDivisionCode;
+        public String PostalCode;
+    }
+    public class SalesItemLineDetail {
+        public CurrencyRef ItemRef;
+        public Double UnitPrice; //use Double instead of Integer, otherwise errors with decimals
+        public Integer Qty; //
+        public CurrencyRef ItemAccountRef;
+        public TaxCodeRef TaxCodeRef; //
+    }
+    public class Line_Z {
+        public String Id;
+        public Integer LineNum;
+        public Double Amount; //use Double instead of Integer, otherwise errors with decimals
+        public String DetailType;
+        public SalesItemLineDetail SalesItemLineDetail;
+        public CustomField SubTotalLineDetail;
+    }
+
+    public class Line_Y {
+        public String Id;
+        public Integer LineNum;
+        public Double Amount; //use Double instead of Integer, otherwise errors with decimals
+        public String DetailType;
+        public SalesItemLineDetail SalesItemLineDetail;
+        public CustomField SubTotalLineDetail;
+    }
+
+    public class Line_X {
+        public String Id;
+        public Integer LineNum;
+        public Double Amount; //use Double instead of Integer, otherwise errors with decimals
+        public String DetailType;
+        public SalesItemLineDetail SalesItemLineDetail;
+        public CustomField SubTotalLineDetail;
+    }
+    public class Line_W {
+        public String Id;
+        public Integer LineNum;
+        public Double Amount; //use Double instead of Integer, otherwise errors with decimals
+        public String DetailType;
+        public SalesItemLineDetail SalesItemLineDetail;
+        public CustomField SubTotalLineDetail;
+    }
+    public class Inv {
+        public QueryResponse_i QueryResponse_i;
+        public String time_i;
+    }
+    /*public class TaxLine { /////
+        public Double Amount;
+        public String DetailType;
+        //public TaxLineDetail TaxLineDetail;
+    }*/
+    public class Line {
+        public String Id;
+        public Integer LineNum;
+        //public String Description;
+        public Double Amount; //use Double instead of Integer, otherwise errors with decimals
+        public String DetailType;
+        public SalesItemLineDetail SalesItemLineDetail;
+        public LinkedTxn SubTotalLineDetail;
+    }
+    public class TaxCodeRef { //
+        public String value;
+    }
+    public class MetaData_i {
+        public String CreateTime;
+        public String LastUpdatedTime;
+    }
+   /*public class TaxLineDetail {
+        public TaxCodeRef TaxRateRef;
+        public Boolean PercentBased;
+        public Double TaxPercent; //Changed from Integer to Double, otherwise errors with decimals
+        public Double NetAmountTaxable;
+    }*/
+    public class QueryResponse_i { //rename to avoid duplicate class
+        public List<Invoice> Invoice;
+        public Integer startPosition;
+        public Integer maxResults;
+        public Integer totalCount;
+    }
+    public class CustomField {
+        public String DefinitionId;
+        public String Type_Z; // in json: Type
+        public String Name;
+        public String StringValue;
+    }
+    //public class BillEmail {
+        //public String Address;
+    //}
+    public class LinkedTxn {
+        public String TxnId;
+        public String TxnType;
+    }
+    /*public class TxnTaxDetail {
+        public Double TotalTax;
+        public List<TaxLine> TaxLine;
+    }*/
+    //end QB Invoice Object classes
+    
+    // ===== QB Term Query Classes =====
+
+       // ===== QB Term Models =====
+    public class QBTermResponse {
+        public TermQueryResponse QueryResponse;
+    }
+
+    public class TermQueryResponse {
+        public List<QBTerm> Term;
+    }
+
+    public class QBTerm {
+        public String Id;
+        public String Name;
+    }
+
+
+    
+    public QuickBooksCarrierCreatorUpdater(ApexPages.StandardController stdController) {
+        CaID = ApexPages.currentPage().getParameters().get('id');
+        clist = new List<Vendor>();
+        clist2 = new List<Vendor>();
+        Ca = [select Id, Name,ABA__c,About__c,Account__c,ACH__c,FreightTM__After_Hours_Phone__c,Bank__c,Bank_info_link__c,FreightTM__Billing_City__c,
+              FreightTM__Billing_Country__c,FreightTM__Billing_State_Province__c,FreightTM__Billing_Address__c,FreightTM__Billing_Zip_Code__c,
+              FreightTM__Cargo_Insurance_Amount__c,FreightTM__Cargo_Insurance_Expiration__c,Carrier_Package__c,Chassis__c,Chassis_Split__c,Check__c,
+              FreightTM__City__c,Contact__c,    Contact_Email_1__c,Contact_Name_1__c,Contact_Phone_1__c
+              ,FreightTM__Country__c,Delinquent_Carrier__c,Detention__c,Drayage__c,FreightTM__Email__c,Factor__c,Factor_NOA__c,Payment_Terms__c,Payment_Terms_QB_ID__c,
+              FreightTM__Fax__c,FreightTM__Federal_ID__c,FSC__c,FTL__c,FreightTM__Hazmat_Permit__c,Lane_Zones_from__c,Lane_Zones_To__c,
+              FreightTM__Liability_Insurance_Amount__c,FreightTM__MC_MX_FF_Number__c,FreightTM__Phone__c,FreightTM__Primary_Contact__c,LQB_QB_Company__c,LQB_QB_Id__c,LQB_QB_No__c,LQB_QB_Seq__c,LQB_QB_Error__c,
+              FreightTM__State_Province__c,FreightTM__Address__c,FreightTM__USDOT_Number__c,FreightTM__Zip_Code__c
+              from FreightTM__Carrier__c where Id = :CaID];
+        system.debug('Carrier :'+Ca);
+    }
+  
+    //create invoice in QB
+    public PageReference send2() {
+        
+        system.debug('Carrier :'+Ca);
+        //if customer fields are blank on Account, prompt error msg before creating new customer
+        if(Ca.FreightTM__Phone__c != null && Ca.FreightTM__Billing_Address__c != null && Ca.FreightTM__Billing_Zip_Code__c != null) {
+            
+            HttpRequest reqcust = new HttpRequest();
+            //Prep customer name (spaces + 's) for query to work
+            string cnam = Ca.Name;
+            String cname = cnam.replace('&', '%26');
+            String cnames = cname.replace(' ', '%20');
+            String cnames2 = cnames.replace('\'s', '%5c%27s');      
+            reqcust.setEndpoint('callout:QuickBooks/query?query=select%20%2a%20from%20Vendor%20Where%20DisplayName%20%3d%20%27'+ cnames2 +'%27');
+            reqcust.setHeader('Accept','application/json');
+            reqcust.setMethod('GET');
+            reqcust.setTimeout(2000); // timeout in milliseconds
+            
+            Http httpc = new Http();
+            HTTPResponse rescust = httpc.send(reqcust);    
+            //System.debug(rescust.toString()); 
+            
+            String custbody = rescust.getBody();
+            String custbody_x = custbody.replace('"time":', '"time_x":'); //time is an apex reserved word, replaced it with time_x
+            system.debug('EEE: ' + custbody_x);
+            
+            //If no errors in query response, deserialize json string response and assign variables to values. Return QB Customer ID
+            if (rescust.getStatusCode() >= 200 && rescust.getStatusCode() < 300) {
+                QuickBooksCarrierCreatorUpdater.Cust c = (QuickBooksCarrierCreatorUpdater.Cust)JSON.deserialize(custbody_x, QuickBooksCarrierCreatorUpdater.Cust.class);
+                system.debug('Will see: ' + c);
+                QueryResponse q = c.QueryResponse;
+                system.debug('Will see: ' + q); 
+                List<Vendor> clist = q.Vendor;
+                system.debug('Will see: ' + clist); 
+                
+                //if Customer does not exist in QB, create new Customer in QB
+                if(clist == null) {
+                    
+                    string CarrierEmailAdd;
+                    if(Ca.FreightTM__Email__c != null ) {
+                        CarrierEmailAdd= Ca.FreightTM__Email__c;
+                    }else{
+                        CarrierEmailAdd = '';
+                    }
+                    
+                    string BillingPostalCode;
+                    if(Ca.FreightTM__Billing_Zip_Code__c != null ) {
+                        BillingPostalCode= Ca.FreightTM__Billing_Zip_Code__c;
+                    }else{
+                        BillingPostalCode = '';
+                    }
+                    
+                    string BillingCountry;
+                    if(Ca.FreightTM__Billing_Country__c != null ) {
+                        BillingCountry= Ca.FreightTM__Billing_Country__c;
+                    }else{
+                        BillingCountry = '';
+                    }
+                    string BillingState;
+                    if(Ca.FreightTM__Billing_State_Province__c != null ) {
+                        BillingState= Ca.FreightTM__Billing_State_Province__c;
+                    }else{
+                        BillingState = '';
+                    }
+                    
+                     String PaymentTermsID;
+                            if(Ca.Payment_Terms_QB_ID__c != null) {
+                                PaymentTermsID = Ca.Payment_Terms_QB_ID__c;
+                            } else {
+                                PaymentTermsID = '6'; // Default value if none of the conditions match
+                            }
+                    
+                    
+                    JSONGenerator genc = JSON.createGenerator(true);
+                    genc.writeStartObject();
+                    genc.writeStringField('DisplayName', Ca.Name);
+                    
+                    genc.writeFieldName('PrimaryEmailAddr');
+                    genc.writeStartObject();
+                    genc.writeStringField('Address', CarrierEmailAdd);
+                    genc.writeEndObject();
+                    
+                    genc.writeFieldName('TermRef');
+                    genc.writeStartObject();
+                    genc.writeStringField('value', PaymentTermsID);
+                    genc.writeEndObject();
+                    
+                    genc.writeFieldName('PrimaryPhone');
+                    genc.writeStartObject();
+                    genc.writeStringField('FreeFormNumber', Ca.FreightTM__Phone__c);
+                    genc.writeEndObject();
+                    
+                    genc.writeFieldName('BillAddr');
+                    genc.writeStartObject();
+                    genc.writeStringField('Line1', Ca.FreightTM__Billing_Address__c);
+                    genc.writeStringField('City', Ca.FreightTM__Billing_City__c);
+                    genc.writeStringField('CountrySubDivisionCode', BillingState);
+                    genc.writeStringField('PostalCode', BillingPostalCode);
+                    genc.writeStringField('Country', BillingCountry);
+                    genc.writeEndObject();
+                    
+                    genc.writeEndObject();
+                                        
+                    String qbnewc = genc.getAsString();
+                    //Sending the http body with JSON 
+                    HttpRequest req = new HttpRequest();
+                    req.setEndpoint('callout:QuickBooks/vendor');
+                    req.setHeader('Content-Type','application/json');
+                    req.setMethod('POST');
+                    req.setHeader('Cache-Control', 'no-cache');
+                    req.setTimeout(2000); //timeout in milliseconds
+                    req.setBody(qbnewc);
+                    
+                    Http http = new Http();
+                    HTTPResponse res = http.send(req);
+                    
+                    System.debug('Response: ' + res);
+                    
+                    
+                    //getQBCustomer();
+                    if (res.getStatusCode() >= 200 && res.getStatusCode() < 300 && Ca.LQB_QB_Id__c == null || Ca.LQB_QB_Id__c == '') {
+                        ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.CONFIRM, 'Carrier has been added to QB.'));
+                        
+                        HttpRequest reqcust2 = new HttpRequest();
+                        reqcust2.setEndpoint('callout:QuickBooks/query?query=select%20%2a%20from%20Vendor%20Where%20DisplayName%20%3d%20%27'+ cnames2 +'%27');
+                        reqcust2.setHeader('Accept','application/json');
+                        reqcust2.setMethod('GET');
+                        reqcust2.setTimeout(2000); // timeout in milliseconds
+                        
+                        Http httpc2 = new Http();
+                        HTTPResponse rescust2 = httpc2.send(reqcust2);    
+                        //System.debug(rescust.toString()); 
+                        
+                        String custbody2 = rescust2.getBody();
+                        String custbody2_x = custbody2.replace('"time":', '"time_x":'); //time is an apex reserved word, replaced it with time_x
+                        system.debug('EEE: ' + custbody2_x);
+                        
+                        //If no errors in query response, deserialize json string response and assign variables to values. Return QB Customer ID
+                        if (rescust2.getStatusCode() >= 200 && rescust2.getStatusCode() < 300) {
+                            QuickBooksCarrierCreatorUpdater.Cust c2 = (QuickBooksCarrierCreatorUpdater.Cust)JSON.deserialize(custbody2_x, QuickBooksCarrierCreatorUpdater.Cust.class);
+                            system.debug('Will see: ' + c2);
+                            QueryResponse q2 = c2.QueryResponse;
+                            system.debug('Will see: ' + q2); 
+                            List<Vendor> clist2 = q2.Vendor;
+                            system.debug('Will see: ' + clist2); 
+                            if (!Test.isRunningTest()) {
+                                for(Vendor qbc : clist2) {
+                                    
+                                    String SyncToken = qbc.SyncToken;
+                                    String CustomerID = qbc.Id;
+                                    qbCarrierid = qbc.Id;
+                                    updateCarrierQBCarrierId(Ca.Id, qbCarrierid);
+                                    system.debug('great, but no page prompt: ' + qbc.Id);
+                                }
+                            }
+                        }
+                        
+                    }else{
+                        ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.Error, 'There was a query issue and Updating the Carrier Record with QBID. Please contact your Administrator.'));
+                    }
+                    
+                }
+                
+                else { //customer exists in QB
+                    for(Vendor qbc : clist) {
+                        
+                        String SyncToken = qbc.SyncToken;
+                        String CustomerID = qbc.Id;
+                        system.debug('Customer val: ' + qbc.DisplayName);
+                        system.debug('Customer val: ' + qbc.SyncToken);
+                        system.debug('Customer val: ' + qbc.id);
+                        //check if Customer exists in QB, if it does, grab Customer Id from QB
+                        if(qbc.DisplayName == Ca.Name) {
+                            
+                            string CarrierEmailAdd;
+                            if(Ca.FreightTM__Email__c != null ) {
+                                CarrierEmailAdd= Ca.FreightTM__Email__c;
+                            }else{
+                                CarrierEmailAdd = '';
+                            }
+                            
+                            string BillingPostalCode;
+                            if(Ca.FreightTM__Billing_Zip_Code__c != null ) {
+                                BillingPostalCode= Ca.FreightTM__Billing_Zip_Code__c;
+                            }else{
+                                BillingPostalCode = '';
+                            }
+                            
+                            string BillingCountry;
+                            if(Ca.FreightTM__Billing_Country__c != null ) {
+                                BillingCountry= Ca.FreightTM__Billing_Country__c;
+                            }else{
+                                BillingCountry = '';
+                            }
+                            string BillingState;
+                            if(Ca.FreightTM__Billing_State_Province__c != null ) {
+                                BillingState= Ca.FreightTM__Billing_State_Province__c;
+                            }else{
+                                BillingState = '';
+                            }
+                            
+                            
+                            String PaymentTermsID;
+                            if(ca.Payment_Terms_QB_ID__c != null) {
+                                PaymentTermsID = ca.Payment_Terms_QB_ID__c;
+                            } else {
+                                PaymentTermsID = '6'; // Default value if none of the conditions match
+                            }
+                    
+                            
+                            
+                            String jsonString;
+                            
+                            // Create a JSON generator
+                            JSONGenerator genc = JSON.createGenerator(true);
+                            
+                            genc.writeStartObject(); //{
+                            genc.writeStringField('domain', 'QBO');
+                            genc.writeFieldName('PrimaryEmailAddr');
+                            genc.writeStartObject(); //{
+                            genc.writeStringField('Address', CarrierEmailAdd);
+                            genc.writeEndObject(); //}
+                            genc.writeFieldName('PrimaryPhone');
+                            genc.writeStartObject(); //{
+                            genc.writeStringField('FreeFormNumber', Ca.FreightTM__Phone__c);
+                            genc.writeEndObject(); //}
+                            genc.writeBooleanField('Active', true);
+                            genc.writeFieldName('BillAddr');
+                            genc.writeStartObject();
+                            genc.writeStringField('Line1', Ca.FreightTM__Billing_Address__c);
+                            genc.writeStringField('City', Ca.FreightTM__Billing_City__c);
+                            genc.writeStringField('CountrySubDivisionCode', BillingState);
+                            genc.writeStringField('PostalCode', BillingPostalCode);
+                            genc.writeStringField('Country', BillingCountry);
+                            genc.writeEndObject();
+                            
+                            genc.writeFieldName('TermRef');
+                            genc.writeStartObject();
+                            genc.writeStringField('value', PaymentTermsID);
+                            genc.writeEndObject();
+                            
+                            
+                            genc.writeStringField('DisplayName', Ca.Name);
+                            genc.writeStringField('SyncToken', SyncToken);
+                            genc.writeStringField('Id', CustomerID);
+                            genc.writeEndObject(); //}
+                            
+                            
+                            String qbnewc = genc.getAsString();
+                            //Sending the http body with JSON 
+                            HttpRequest req = new HttpRequest();
+                            req.setEndpoint('callout:QuickBooks/vendor');
+                            req.setHeader('Content-Type','application/json');
+                            req.setMethod('POST');
+                            req.setHeader('Cache-Control', 'no-cache');
+                            req.setTimeout(2000); //timeout in milliseconds
+                            req.setBody(qbnewc);
+                            
+                            Http http = new Http();
+                            HTTPResponse res = http.send(req);
+                            
+                            System.debug('Response: ' + res);
+                            if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
+                                qbCarrierid = qbc.Id;
+                                updateCarrierQBCarrierId(Ca.Id, qbCarrierid);
+                                system.debug('great: ' + qbc.Id);
+                                ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.CONFIRM, 'Carrier has been Updated in QB.'));
+                                // Update the Salesforce record here
+                            } else {
+                               ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.Error, 'There was a query issue and Updating the Carrier Record with QBID. Please contact your Administrator.'));
+                   
+                               //Due on receipt (ID: 6) | Net 15 (ID: 7) | Net 30 (ID: 8) | Net 60 (ID: 9)
+                              //  String availableTerms =
+                                    //QuickBooksCarrierCreatorUpdater.getQBPaymentTermsForMessage();
+                            
+                               // ApexPages.addMessage(
+                                   // new ApexPages.message(
+                                      //  ApexPages.Severity.ERROR,
+                                       // 'QB update failed. Selected Payment Term ID: ' +
+                                        //Ca.Payment_Terms_QB_ID__c +
+                                       // '. Available QB Terms: ' + availableTerms
+                                   // )
+                                //);
+                            }
+
+                            
+                            
+                            //msg = 'Customer is in QB. Please refresh browser, and click button once more to create Invoice in QB.';
+                        }
+                    }
+                }
+                
+            }//if query response error, prompt error msg
+            else {
+                ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.error, 'There was a query issue for getting the Carrier Info to update or create. Please contact your Administrator.')); 
+            }
+        }//customer address/phone is not null
+        else {
+            ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.error, 'Please make sure Carrier\'s Phone and Billing Address is filled in under Address Information.')); 
+        }
+        
+        return null;
+        
+    }      
+    
+   
+    private static void updateCarrierQBCarrierId(Id accountId, String qbCarrierid) {
+    if (qbCarrierid != null) {
+        FreightTM__Carrier__c CarrToUpdate = new FreightTM__Carrier__c(Id = accountId, LQB_QB_Id__c = qbCarrierid,LQB_QB_Error__c = 'Success');
+        update CarrToUpdate;
+    } else {
+        // Handle the case where qbcustomerid is null (optional)
+        System.debug('qbCarrierid is null. Update not performed.');
+    }
+}
+    
+    private static String getQBPaymentTermsForMessage() {
+
+    try {
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(
+            'callout:QuickBooks/query?query=select%20Id%2C%20Name%20from%20Term'
+        );
+        req.setMethod('GET');
+        req.setHeader('Accept', 'application/json');
+        req.setTimeout(2000);
+
+        Http http = new Http();
+        HttpResponse res = http.send(req);
+
+        if (res.getStatusCode() >= 200 && res.getStatusCode() < 300) {
+
+            QBTermResponse tr =
+                (QBTermResponse) JSON.deserialize(res.getBody(), QBTermResponse.class);
+
+            if (tr != null &&
+                tr.QueryResponse != null &&
+                tr.QueryResponse.Term != null) {
+
+                List<String> terms = new List<String>();
+
+                for (QBTerm t : tr.QueryResponse.Term) {
+                    terms.add(t.Name + ' (ID: ' + t.Id + ')');
+                }
+
+                return String.join(terms, ' | ');
+            }
+        }
+
+    } catch (Exception e) {
+        System.debug('Error fetching QB Terms: ' + e.getMessage());
+    }
+
+    return 'Unable to fetch Payment Terms from QuickBooks.';
+}
+
+
+    public String getName() {
+        return 'QuickBooksCarrierCreatorUpdator2';
+    }
+}
