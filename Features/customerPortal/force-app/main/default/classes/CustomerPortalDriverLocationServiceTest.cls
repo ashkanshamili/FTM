@@ -90,45 +90,145 @@ private class CustomerPortalDriverLocationServiceTest {
     }
 
     @IsTest
-    static void validatesDriverLocationInputsAndAccess() {
-        CustomerPortalTestDataFactory.registerFreightGraphCalloutMock();
-        Account accountRec = CustomerPortalTestDataFactory.createAccount('Driver Validation');
-        FreightTM__Load__c inactiveLoad = CustomerPortalTestDataFactory.createLoad(
-            accountRec.Id, 'Assigned', 1000, 'DRIVER-INACTIVE'
-        );
-        FreightTM__Load__c expiredLoad = CustomerPortalTestDataFactory.createLoad(
-            accountRec.Id, 'Assigned', 1100, 'DRIVER-EXPIRED'
-        );
-        FreightTM__Load__c tokenLoad = CustomerPortalTestDataFactory.createLoad(
-            accountRec.Id, 'Assigned', 1200, 'DRIVER-BAD-TOKEN'
-        );
-        String validToken = 'valid-driver-token';
-        update new FreightTM__Load__c(
-            Id = expiredLoad.Id,
-            Driver_Portal_Active__c = true,
-            Driver_Portal_Expires_At__c = System.now().addMinutes(-1),
-            Driver_Portal_Token_Hash__c = CustomerPortalTokenService.hashToken(validToken)
-        );
-        update new FreightTM__Load__c(
-            Id = tokenLoad.Id,
-            Driver_Portal_Active__c = true,
-            Driver_Portal_Expires_At__c = System.now().addDays(1),
-            Driver_Portal_Token_Hash__c = CustomerPortalTokenService.hashToken(validToken)
+static void validatesDriverLocationInputsAndAccess() {
+    CustomerPortalTestDataFactory.registerFreightGraphCalloutMock();
+
+    Account accountRec =
+        CustomerPortalTestDataFactory.createAccount(
+            'Driver Validation'
         );
 
-        assertUpdateFails(null, 'bad-token', 1, 1);
-        assertUpdateFails('not-an-id', 'bad-token', 1, 1);
-        assertUpdateFails(String.valueOf(tokenLoad.Id), null, 1, 1);
-        assertUpdateFails(String.valueOf(tokenLoad.Id), validToken, null, 1);
-        assertUpdateFails(String.valueOf(tokenLoad.Id), validToken, 91, 1);
-        assertUpdateFails(String.valueOf(tokenLoad.Id), validToken, -91, 1);
-        assertUpdateFails(String.valueOf(tokenLoad.Id), validToken, 1, 181);
-        assertUpdateFails(String.valueOf(tokenLoad.Id), validToken, 1, -181);
-        assertUpdateFails(String.valueOf(inactiveLoad.Id), validToken, 1, 1);
-        assertUpdateFails(String.valueOf(expiredLoad.Id), validToken, 1, 1);
-        assertUpdateFails(String.valueOf(tokenLoad.Id), 'incorrect-token', 1, 1);
-    }
+    FreightTM__Load__c inactiveLoad =
+        CustomerPortalTestDataFactory.createLoad(
+            accountRec.Id,
+            'Assigned',
+            1000,
+            'DRIVER-INACTIVE'
+        );
 
+    FreightTM__Load__c expiredLoad =
+        CustomerPortalTestDataFactory.createLoad(
+            accountRec.Id,
+            'Assigned',
+            1100,
+            'DRIVER-EXPIRED'
+        );
+
+    FreightTM__Load__c tokenLoad =
+        CustomerPortalTestDataFactory.createLoad(
+            accountRec.Id,
+            'Assigned',
+            1200,
+            'DRIVER-BAD-TOKEN'
+        );
+
+    // Each Load must have its own unique raw token.
+    String expiredToken =
+        'expired-driver-token-' + expiredLoad.Id;
+
+    String validToken =
+        'valid-driver-token-' + tokenLoad.Id;
+
+    update new FreightTM__Load__c(
+        Id = expiredLoad.Id,
+        Driver_Portal_Active__c = true,
+        Driver_Portal_Expires_At__c =
+            System.now().addMinutes(-1),
+        Driver_Portal_Token_Hash__c =
+            CustomerPortalTokenService.hashToken(
+                expiredToken
+            )
+    );
+
+    update new FreightTM__Load__c(
+        Id = tokenLoad.Id,
+        Driver_Portal_Active__c = true,
+        Driver_Portal_Expires_At__c =
+            System.now().addDays(1),
+        Driver_Portal_Token_Hash__c =
+            CustomerPortalTokenService.hashToken(
+                validToken
+            )
+    );
+
+    assertUpdateFails(
+        null,
+        'bad-token',
+        1,
+        1
+    );
+
+    assertUpdateFails(
+        'not-an-id',
+        'bad-token',
+        1,
+        1
+    );
+
+    assertUpdateFails(
+        String.valueOf(tokenLoad.Id),
+        null,
+        1,
+        1
+    );
+
+    assertUpdateFails(
+        String.valueOf(tokenLoad.Id),
+        validToken,
+        null,
+        1
+    );
+
+    assertUpdateFails(
+        String.valueOf(tokenLoad.Id),
+        validToken,
+        91,
+        1
+    );
+
+    assertUpdateFails(
+        String.valueOf(tokenLoad.Id),
+        validToken,
+        -91,
+        1
+    );
+
+    assertUpdateFails(
+        String.valueOf(tokenLoad.Id),
+        validToken,
+        1,
+        181
+    );
+
+    assertUpdateFails(
+        String.valueOf(tokenLoad.Id),
+        validToken,
+        1,
+        -181
+    );
+
+    assertUpdateFails(
+        String.valueOf(inactiveLoad.Id),
+        validToken,
+        1,
+        1
+    );
+
+    // Use the token belonging to expiredLoad.
+    assertUpdateFails(
+        String.valueOf(expiredLoad.Id),
+        expiredToken,
+        1,
+        1
+    );
+
+    assertUpdateFails(
+        String.valueOf(tokenLoad.Id),
+        'incorrect-token',
+        1,
+        1
+    );
+}
     private static void assertUpdateFails(
         String loadId,
         String token,
