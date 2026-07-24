@@ -1,0 +1,16 @@
+<template>
+    <lightning-card
+        title="On-Boarding Info"
+        icon-name="standard:partner_fund_allocation">
+        <div class="panel-body">
+            <lightning-record-form
+                record-id={recordId}
+                object-api-name={carrierObject}
+                fields={fields}
+                columns="2"
+                mode="view"
+                density="comfy">
+            </lightning-record-form>
+        </div>
+    </lightning-card>
+</template>

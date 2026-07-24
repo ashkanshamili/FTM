@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SharingRules xmlns="http://soap.sforce.com/2006/04/metadata">
+    <sharingGuestRules>
+        <fullName>Carrier_Onboarding_rule</fullName>
+        <accessLevel>Read</accessLevel>
+        <description>Shares Carrier records marked for public onboarding with the Carrier Onboarding Site Guest User.</description>
+        <label>Carrier-Onboarding rule</label>
+        <sharedTo>
+            <guestUser>REPLACE_WITH_SITE_GUEST_USER_NICKNAME</guestUser>
+        </sharedTo>
+        <criteriaItems>
+            <field>Public_Onboarding_Access__c</field>
+            <operation>equals</operation>
+            <value>true</value>
+        </criteriaItems>
+    </sharingGuestRules>
+</SharingRules>

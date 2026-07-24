@@ -1,0 +1,7 @@
+.panel-body {
+    padding: 0 1rem 1rem;
+}
+
+:host {
+    display: block;
+}
