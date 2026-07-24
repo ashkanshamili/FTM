@@ -1,0 +1,84 @@
+<apex:page showHeader="false"
+           sidebar="false"
+           standardStylesheets="false"
+           applyHtmlTag="false"
+           applyBodyTag="false"
+           docType="html-5.0">
+    <html>
+        <head>
+            <meta charset="UTF-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+            <meta name="theme-color" content="#F4F7FB"/>
+            <title>Customer Portal</title>
+            <style>
+                html, body { margin: 0; padding: 0; min-height: 100%; background: #F4F7FB; color: #0B1220; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+                .page-shell { min-height: 100vh; background: #F4F7FB; color: #0B1220; }
+                #customerPortalLoader, #customerPortalError { width: min(720px, calc(100% - 40px)); margin: 0 auto; padding: 32px 20px; color: #334155; text-align: center; font-weight: 650; box-sizing: border-box; }
+                #customerPortalError { display: none; margin-top: 24px; background: #FFFFFF; border: 1px solid #FCA5A5; border-radius: 18px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); color: #991B1B; line-height: 1.5; white-space: pre-wrap; }
+                .noscript-message { width: min(640px, calc(100% - 40px)); margin: 0 auto; padding: 24px 20px; background: #FFFFFF; border: 1px solid #D9E3EF; border-radius: 18px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); transform: translateY(24px); text-align: center; font-weight: 650; }
+            </style>
+        </head>
+        <body>
+            <div class="page-shell">
+                <noscript><div class="noscript-message">JavaScript is required to use the Customer Portal.</div></noscript>
+                <apex:includeLightning />
+                <div id="customerPortalLoader">Loading Customer Portal...</div>
+                <div id="customerPortalError"></div>
+                <div id="customerPortalContainer"></div>
+                <script>
+                    (function() {
+                        // Use the exact origin that served this Visualforce page. This avoids
+                        // Lightning Out endpoint mismatches during public access, domain redirects,
+                        // and Preview as Admin.
+                        var lightningEndpoint = window.location.origin;
+                        var params = new URLSearchParams(window.location.search);
+                        var pageName = params.get("p") || "dashboard";
+                        var loadId = params.get("loadId") || params.get("id");
+                        var loader = document.getElementById("customerPortalLoader");
+                        var errorBox = document.getElementById("customerPortalError");
+                        function showError(message) {
+                            if (loader) loader.style.display = "none";
+                            if (errorBox) { errorBox.style.display = "block"; errorBox.textContent = message; }
+                            console.error(message);
+                        }
+                        var completed = false;
+                        var bootTimeout = window.setTimeout(function() {
+                            if (completed) return;
+                            showError(
+                                "Customer Portal could not start within 25 seconds.\n\n" +
+                                "Confirm that the Salesforce Site is Active, Lightning Features for Guest Users is enabled, " +
+                                "and Redirect to custom domain is disabled unless a real primary custom URL is configured."
+                            );
+                        }, 25000);
+
+                        function finishBoot() {
+                            completed = true;
+                            window.clearTimeout(bootTimeout);
+                        }
+
+                        try {
+                            $Lightning.use("c:CustomerPortalApp", function() {
+                                $Lightning.createComponent(
+                                    "c:customerPortalHost",
+                                    { pageName: pageName, loadId: loadId },
+                                    "customerPortalContainer",
+                                    function(component, status, errorMessage) {
+                                        finishBoot();
+                                        if (status === "SUCCESS") {
+                                            if (loader) loader.style.display = "none";
+                                            return;
+                                        }
+                                        showError("Customer Portal failed to load.\n\nStatus: " + status + "\n\nError: " + (errorMessage || "No error message returned."));
+                                    }
+                                );
+                            }, lightningEndpoint);
+                        } catch (e) {
+                            finishBoot();
+                            showError("Customer Portal JavaScript error:\n\n" + e.message);
+                        }
+                    })();
+                </script>
+            </div>
+        </body>
+    </html>
+</apex:page>

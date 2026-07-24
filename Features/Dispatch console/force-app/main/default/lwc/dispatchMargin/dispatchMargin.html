@@ -1,0 +1,191 @@
+<template>
+    <section class="margin-wrap">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading margin page" size="small"></lightning-spinner>
+        </template>
+        <template if:true={errorMessage}>
+            <div class="empty-box">{errorMessage}</div>
+        </template>
+        <div class="margin-header">
+            <div>
+                <p class="eyebrow">Profitability</p>
+                <h2>Gross Margin Performance</h2>
+                <span>{marginCountLabel}</span>
+            </div>
+
+            <div class="header-actions">
+                <button class={allViewClass} data-view="all" onclick={handleViewChange}>All Loads</button>
+                <button class={lowMarginViewClass} data-view="lowMargin" onclick={handleViewChange}>Low Margin</button>
+                <button class={profitableViewClass} data-view="profitable" onclick={handleViewChange}>Profitable</button>
+            </div>
+        </div>
+
+        <section class="finance-kpis">
+            <article class="kpi-card hero-kpi">
+                <span>Total Gross Margin</span>
+                <strong>{totalGrossMargin}</strong>
+                <small>Across loaded records</small>
+            </article>
+
+            <article class="kpi-card">
+                <span>Average Margin %</span>
+                <strong>{avgMarginPercent}%</strong>
+                <small>{avgMarginLabel}</small>
+            </article>
+
+            <article class="kpi-card warning-kpi">
+                <span>Low Margin Loads</span>
+                <strong>{lowMarginCount}</strong>
+                <small>Below 15%</small>
+            </article>
+
+            <article class="kpi-card">
+                <span>Best Margin</span>
+                <strong>{bestMarginPercent}</strong>
+                <small>{bestMarginLoad}</small>
+            </article>
+
+            <article class="kpi-card danger-kpi">
+                <span>Margin at Risk</span>
+                <strong>{marginAtRisk}</strong>
+                <small>From low-margin loads</small>
+            </article>
+        </section>
+
+        <section class="margin-insights">
+            <article class="insight-card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Distribution</p>
+                        <h3>Margin Health</h3>
+                    </div>
+                </div>
+
+                <div class="distribution-list">
+                    <template for:each={distributionRows} for:item="row">
+                        <div key={row.label} class="distribution-row">
+                            <div class="distribution-label">
+                                <span>{row.label}</span>
+                                <strong>{row.count}</strong>
+                            </div>
+
+                            <div class="bar-track">
+                                <div class={row.barClass}></div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </article>
+
+            <article class="insight-card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Best Lanes</p>
+                        <h3>Top Profitable Lanes</h3>
+                    </div>
+                </div>
+
+                <div class="lane-list">
+                    <template for:each={topLaneRows} for:item="lane">
+                        <div key={lane.key} class="lane-row">
+                            <div>
+                                <strong>{lane.route}</strong>
+                                <span>{lane.loadCount} loads</span>
+                            </div>
+                            <em>{lane.avgMargin}%</em>
+                        </div>
+                    </template>
+                </div>
+            </article>
+
+            <article class="insight-card warning-card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Alerts</p>
+                        <h3>Worst Lanes</h3>
+                    </div>
+                </div>
+
+                <div class="lane-list">
+                    <template for:each={worstLaneRows} for:item="lane">
+                        <div key={lane.key} class="lane-row warning">
+                            <div>
+                                <strong>{lane.route}</strong>
+                                <span>{lane.loadCount} loads</span>
+                            </div>
+                            <em>{lane.avgMargin}%</em>
+                        </div>
+                    </template>
+                </div>
+            </article>
+        </section>
+
+        <section class="margin-table-section">
+            <div class="table-toolbar">
+                <div class="search-wrap">
+                    <label>Search Margin Records</label>
+                    <input
+                        type="search"
+                        value={searchKey}
+                        oninput={handleSearchChange}
+                        placeholder="Search load, route, carrier..." />
+                </div>
+
+                <span>{filteredCountLabel}</span>
+            </div>
+
+            <div class="margin-table">
+                <div class="table-header">
+                    <span>Load</span>
+                    <span>Route</span>
+                    <span>Carrier</span>
+                    <span>Gross Margin</span>
+                    <span>Margin %</span>
+                    <span>Health</span>
+                    <span>Actions</span>
+                </div>
+
+                <template if:true={hasMargins}>
+                    <template for:each={paginatedMarginRows} for:item="load">
+                        <article key={load.Id} class={load.rowClass}>
+                            <span class="load-number">{load.Name}</span>
+
+                            <div>
+                                <strong>{load.route}</strong>
+                                <small>{load.routeStates}</small>
+                            </div>
+
+                            <span>{load.carrierName}</span>
+
+                            <span>{load.grossMargin}</span>
+
+                            <strong class={load.marginClass}>{load.marginPercent}</strong>
+
+                            <span class={load.healthClass}>{load.healthLabel}</span>
+
+                            <button data-id={load.Id} onclick={handleOpenLoad}>Open Load</button>
+                        </article>
+                    </template>
+                </template>
+
+                <template if:false={hasMargins}>
+                    <div class="empty-box">No margin records found for the selected filters.</div>
+                </template>
+
+                <template if:true={hasMargins}>
+                    <div class="pagination-bar">
+                        <span>{pageRangeLabel}</span>
+
+                        <div class="pagination-controls">
+                            <button onclick={handleFirstPage} disabled={previousDisabled} title="First page">«</button>
+                            <button onclick={handlePreviousPage} disabled={previousDisabled}>Previous</button>
+                            <strong>Page {pageNumber} of {totalPages}</strong>
+                            <button onclick={handleNextPage} disabled={nextDisabled}>Next</button>
+                            <button onclick={handleLastPage} disabled={nextDisabled} title="Last page">»</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+    </section>
+</template>

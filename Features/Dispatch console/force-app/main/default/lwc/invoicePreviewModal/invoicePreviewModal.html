@@ -1,0 +1,38 @@
+<template>
+    <lightning-modal-header label={modalTitle}></lightning-modal-header>
+
+    <lightning-modal-body>
+        <template if:true={loadId}>
+            <div class="preview-frame-wrap">
+                <iframe
+                    src={previewUrl}
+                    title="Invoice PDF Preview"
+                    class="preview-frame">
+                </iframe>
+            </div>
+        </template>
+
+        <template if:false={loadId}>
+            <div class="slds-p-around_medium">
+                No load selected.
+            </div>
+        </template>
+    </lightning-modal-body>
+
+    <lightning-modal-footer>
+        <lightning-button
+            label="Cancel"
+            variant="neutral"
+            onclick={handleCancel}
+            disabled={isSaving}>
+        </lightning-button>
+
+        <lightning-button
+            label={sendButtonLabel}
+            variant="brand"
+            onclick={handleSend}
+            disabled={sendDisabled}
+            class="slds-m-left_small">
+        </lightning-button>
+    </lightning-modal-footer>
+</template>

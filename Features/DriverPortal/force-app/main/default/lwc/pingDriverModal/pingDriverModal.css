@@ -1,0 +1,79 @@
+.modal-content {
+    display: grid;
+    gap: 16px;
+    padding: 4px 0 12px;
+}
+
+.load-banner {
+    padding: 12px 14px;
+    background: #eef4ff;
+    border: 1px solid #c9dcff;
+    border-radius: 8px;
+}
+
+.load-banner span {
+    display: block;
+    margin-bottom: 3px;
+    color: #5f6b7a;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.load-banner strong {
+    color: #16325c;
+    font-size: 16px;
+}
+
+.portal-section {
+    padding: 12px;
+    background: #f3f3f3;
+    border: 1px solid #dddbda;
+    border-radius: 8px;
+    overflow-wrap: anywhere;
+}
+
+.field-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #3e3e3c;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.portal-section a {
+    color: #0176d3;
+}
+
+.missing-link {
+    color: #ba0517;
+}
+
+.message-preview {
+    padding: 12px;
+    background: #f8fbff;
+    border-left: 4px solid #0176d3;
+    border-radius: 4px;
+}
+
+.message-preview span {
+    display: block;
+    margin-bottom: 5px;
+    color: #444;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.message-preview p {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.error-message {
+    padding: 10px 12px;
+    color: #ba0517;
+    background: #fef1ee;
+    border: 1px solid #ea001e;
+    border-radius: 6px;
+}

@@ -1,0 +1,26 @@
+<apex:page
+    standardController="FreightTM__Load__c"
+    extensions="DriverPortalGenerateLinkController"
+    action="{!generateAndReturn}"
+    showHeader="true"
+    sidebar="false"
+    lightningStylesheets="true">
+    <apex:pageMessages/>
+    <apex:form>
+        <apex:pageBlock title="Driver Portal Link">
+            <apex:pageBlockButtons>
+                <apex:commandButton
+                    value="Try Again"
+                    action="{!generateAndReturn}"/>
+                <apex:commandButton
+                    value="Return to Load"
+                    action="{!cancel}"/>
+            </apex:pageBlockButtons>
+            <apex:outputPanel rendered="{!NOT(ISBLANK(generatedLink))}">
+                <apex:outputLink value="{!generatedLink}" target="_blank">
+                    Open Driver Portal
+                </apex:outputLink>
+            </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

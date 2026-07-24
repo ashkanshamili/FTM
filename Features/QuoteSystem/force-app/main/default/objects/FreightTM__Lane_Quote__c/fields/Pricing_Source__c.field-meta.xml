@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pricing_Source__c</fullName>
+    <label>Pricing Source</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Missing Data</fullName>
+                <default>true</default>
+                <label>Missing Data</label>
+            </value>
+            <value>
+                <fullName>Tariff Table</fullName>
+                <default>false</default>
+                <label>Tariff Table</label>
+            </value>
+            <value>
+                <fullName>Tariff Table + Contract / Customer Terms</fullName>
+                <default>false</default>
+                <label>Tariff Table + Contract / Customer Terms</label>
+            </value>
+            <value>
+                <fullName>Exact Lane History</fullName>
+                <default>false</default>
+                <label>Exact Lane History</label>
+            </value>
+            <value>
+                <fullName>Exact Lane History + Contract / Customer Terms</fullName>
+                <default>false</default>
+                <label>Exact Lane History + Contract / Customer Terms</label>
+            </value>
+            <value>
+                <fullName>Similar Shipment History</fullName>
+                <default>false</default>
+                <label>Similar Shipment History</label>
+            </value>
+            <value>
+                <fullName>Similar Shipment History + Contract / Customer Terms</fullName>
+                <default>false</default>
+                <label>Similar Shipment History + Contract / Customer Terms</label>
+            </value>
+            <value>
+                <fullName>Carrier Cost + Target Margin</fullName>
+                <default>false</default>
+                <label>Carrier Cost + Target Margin</label>
+            </value>
+            <value>
+                <fullName>Carrier Cost + Target Margin + Contract / Customer Terms</fullName>
+                <default>false</default>
+                <label>Carrier Cost + Target Margin + Contract / Customer Terms</label>
+            </value>
+            <value>
+                <fullName>Quote Pay Cost + Target Margin</fullName>
+                <default>false</default>
+                <label>Quote Pay Cost + Target Margin</label>
+            </value>
+            <value>
+                <fullName>Quote Pay Cost + Target Margin + Contract / Customer Terms</fullName>
+                <default>false</default>
+                <label>Quote Pay Cost + Target Margin + Contract / Customer Terms</label>
+            </value>
+            <value>
+                <fullName>Fallback Rule</fullName>
+                <default>false</default>
+                <label>Fallback Rule</label>
+            </value>
+            <value>
+                <fullName>Fallback Rule + Contract / Customer Terms</fullName>
+                <default>false</default>
+                <label>Fallback Rule + Contract / Customer Terms</label>
+            </value>
+            <value>
+                <fullName>Manual Override</fullName>
+                <default>false</default>
+                <label>Manual Override</label>
+            </value>
+            <value>
+                <fullName>Fallback Tariff Estimate</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Fallback Tariff Estimate</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

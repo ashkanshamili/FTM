@@ -1,0 +1,45 @@
+<template>
+    <lightning-card title="Driver Portal Admin Section" icon-name="standard:link">
+        <div class="slds-p-horizontal_medium slds-p-top_small">
+            <div class="action-bar">
+                <lightning-button
+                    variant="brand"
+                    label={generateButtonLabel}
+                    title="Generate or refresh the secure Driver Portal link"
+                    onclick={handleGenerate}
+                    disabled={isBusy}>
+                </lightning-button>
+
+                <lightning-button
+                    label="Copy Link"
+                    title="Copy the Driver Portal link"
+                    onclick={handleCopy}
+                    disabled={copyDisabled}>
+                </lightning-button>
+
+                <template if:true={isBusy}>
+                    <lightning-spinner
+                        alternative-text="Generating Driver Portal link"
+                        size="small">
+                    </lightning-spinner>
+                </template>
+            </div>
+
+            <template if:false={hasDriver}>
+                <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-top_small" role="alert">
+                    Select a Driver on this Load before generating the portal link.
+                </div>
+            </template>
+        </div>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <lightning-record-form
+                record-id={recordId}
+                object-api-name={objectApiName}
+                fields={fields}
+                columns="2"
+                mode="view">
+            </lightning-record-form>
+        </div>
+    </lightning-card>
+</template>

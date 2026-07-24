@@ -1,0 +1,507 @@
+<template>
+    <main class="portal">
+        <section class="private-board">
+            <header class="private-board-header">
+                <div class="header-brand">
+                    <div class="logo-cloud">
+                      <img
+                         src={ftmLogoUrl}
+                         alt="FTM Logo"
+                         class="ftm-logo"
+                        />
+                    </div>
+
+                    <div class="header-copy">
+                        <p class="eyebrow">
+                            Carrier Portal
+                        </p>
+
+                        <h1>
+                            Private Loadboard
+                        </h1>
+
+                        <p class="header-description">
+                            Review available loads, compare carrier bids,
+                            and assign the right carrier from one workspace.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="live-status" title="Loadboard is active">
+                    <span class="live-dot"></span>
+                    Live
+                </div>
+            </header>
+
+            <section class="metrics-grid" aria-label="Loadboard summary">
+                <article class="metric">
+                    <span class="metric-label">
+                        Open Opportunities
+                    </span>
+
+                    <strong class="metric-value">
+                        {openOpportunityCount}
+                    </strong>
+                </article>
+
+                <article class="metric">
+                    <span class="metric-label">
+                        Carriers With Bids
+                    </span>
+
+                    <strong class="metric-value">
+                        {approvedCarrierCount}
+                    </strong>
+                </article>
+
+                <article class="metric">
+                    <span class="metric-label">
+                        Average Response
+                    </span>
+
+                    <strong class="metric-value">
+                        {averageResponseDisplay}
+                    </strong>
+                </article>
+            </section>
+
+            <section class="board-content">
+                <header class="content-heading">
+                    <div>
+                        <p class="section-kicker">
+                            Available Loads
+                        </p>
+
+                        <h2>
+                            Open opportunities
+                        </h2>
+
+                        <p>
+                            Search by load, lane, carrier, or bid amount.
+                        </p>
+                    </div>
+
+                    <span class="result-count">
+                        {openOpportunityCount} open
+                    </span>
+                </header>
+
+                <section class="board-tools">
+                    <lightning-input
+                        class="load-search"
+                        type="search"
+                        name="searchText"
+                        label="Search"
+                        variant="label-hidden"
+                        placeholder="Search load, lane, carrier, or bid"
+                        value={searchText}
+                        onchange={handleSearchChange}>
+                    </lightning-input>
+
+                    <div class="tool-actions">
+                        <lightning-button
+                            class="refresh-button"
+                            label="Refresh"
+                            onclick={loadBoardData}
+                            disabled={loading}>
+                        </lightning-button>
+                    </div>
+                </section>
+
+                <template if:true={successMessage}>
+                    <div class="message success-message board-message">
+                        {successMessage}
+                    </div>
+                </template>
+
+                <template if:true={loading}>
+                    <div class="spinner-container">
+                        <lightning-spinner
+                            alternative-text="Loading">
+                        </lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div class="message error-message board-message">
+                        {errorMessage}
+                    </div>
+                </template>
+
+                <template if:true={hasLoads}>
+                    <section class="opportunity-list">
+                        <template
+                            for:each={filteredLoads}
+                            for:item="load">
+
+                            <article
+                                key={load.loadId}
+                                class="opportunity-row">
+
+                                <div class="opportunity-main">
+                                    <div class="opportunity-route">
+                                        <div class="load-identity">
+                                            <span class="load-label">
+                                                Load
+                                            </span>
+
+                                            <strong class="load-number">
+                                                {load.loadNumber}
+                                            </strong>
+                                        </div>
+
+                                        <div class="route-heading">
+                                            <span>{load.origin}</span>
+
+                                            <span
+                                                class="route-arrow"
+                                                aria-hidden="true">
+                                                →
+                                            </span>
+
+                                            <span>{load.destination}</span>
+                                        </div>
+
+                                        <div class="route-summary">
+                                            <span>{load.trailerDisplay}</span>
+                                            <span>{load.pickupDateFormatted}</span>
+                                            <span>{load.weightFormatted}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="opportunity-right">
+                                        <lightning-button
+                                            class="view-button"
+                                            label="View details"
+                                            variant="brand"
+                                            data-load-id={load.loadId}
+                                            onclick={handleViewDetails}>
+                                        </lightning-button>
+                                    </div>
+                                </div>
+
+                                <template if:true={load.hasBids}>
+                                    <div class="bid-section">
+                                        <span class="bid-section-label">
+                                            Carrier bids
+                                        </span>
+
+                                        <div class="response-area">
+                                            <template
+                                                for:each={load.bids}
+                                                for:item="bid">
+
+                                                <button
+                                                    key={bid.bidId}
+                                                    type="button"
+                                                    class="carrier-pill"
+                                                    data-load-id={load.loadId}
+                                                    data-bid-id={bid.bidId}
+                                                    onclick={handleBidClick}>
+
+                                                    <span class="response-initials">
+                                                        {bid.initials}
+                                                    </span>
+
+                                                    <span class="carrier-name">
+                                                        {bid.carrierName}
+                                                    </span>
+
+                                                    <span class="carrier-rate">
+                                                        {bid.rateDisplay}
+                                                    </span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template if:false={load.hasBids}>
+                                    <p class="no-carriers">
+                                        No active bids are available.
+                                    </p>
+                                </template>
+                            </article>
+                        </template>
+                    </section>
+                </template>
+
+                <template if:true={showEmptyState}>
+                    <section class="empty-state">
+                        <div class="empty-state-icon" aria-hidden="true">
+                            ✓
+                        </div>
+
+                        <h2>No open loads with bids</h2>
+
+                        <p>
+                            Loads appear here when they are open,
+                            unassigned, not canceled, and have at least one bid.
+                        </p>
+                    </section>
+                </template>
+            </section>
+        </section>
+
+        <!-- BID POPUP -->
+        <template if:true={showBidModal}>
+            <section
+                role="dialog"
+                tabindex="-1"
+                aria-modal="true"
+                aria-labelledby="bid-modal-title"
+                class="slds-modal slds-fade-in-open">
+
+                <div class="slds-modal__container carrier-modal">
+                    <header class="slds-modal__header carrier-modal-header">
+                        <p class="modal-kicker">
+                            Carrier bid
+                        </p>
+
+                        <h2
+                            id="bid-modal-title"
+                            class="slds-text-heading_medium">
+                            {selectedBid.carrierName}
+                        </h2>
+
+                        <p class="carrier-modal-load">
+                            {selectedBid.loadNumber}
+                            · {selectedBid.lane}
+                        </p>
+                    </header>
+
+                    <div class="slds-modal__content carrier-modal-content">
+                        <div class="carrier-detail-grid">
+                            <div class="carrier-detail">
+                                <span class="carrier-detail-label">
+                                    Bid
+                                </span>
+
+                                <strong>
+                                    {selectedBid.bidName}
+                                </strong>
+                            </div>
+
+                            <div class="carrier-detail rate-detail">
+                                <span class="carrier-detail-label">
+                                    Rate
+                                </span>
+
+                                <strong class="bid-rate-detail">
+                                    {selectedBid.rateDisplay}
+                                </strong>
+                            </div>
+
+                            <div class="carrier-detail">
+                                <span class="carrier-detail-label">
+                                    Contact
+                                </span>
+
+                                <strong>
+                                    {selectedBid.contactDisplay}
+                                </strong>
+                            </div>
+
+                            <div class="carrier-detail">
+                                <span class="carrier-detail-label">
+                                    Email
+                                </span>
+
+                                <strong>
+                                    {selectedBid.emailDisplay}
+                                </strong>
+                            </div>
+
+                            <div class="carrier-detail">
+                                <span class="carrier-detail-label">
+                                    Phone
+                                </span>
+
+                                <strong>
+                                    {selectedBid.phoneDisplay}
+                                </strong>
+                            </div>
+
+                            <div class="carrier-detail">
+                                <span class="carrier-detail-label">
+                                    Rating
+                                </span>
+
+                                <strong>
+                                    {selectedBid.ratingDisplay}
+                                </strong>
+                            </div>
+
+                            <div class="carrier-detail">
+                                <span class="carrier-detail-label">
+                                    Transition Date
+                                </span>
+
+                                <strong>
+                                    {selectedBid.transitionDateDisplay}
+                                </strong>
+                            </div>
+
+                            <div class="carrier-detail">
+                                <span class="carrier-detail-label">
+                                    Transit Time
+                                </span>
+
+                                <strong>
+                                    {selectedBid.transitTimeDisplay}
+                                </strong>
+                            </div>
+
+                            <div class="carrier-detail">
+                                <span class="carrier-detail-label">
+                                    Bid Submitted
+                                </span>
+
+                                <strong>
+                                    {selectedBid.submittedDateDisplay}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <template if:true={bidModalMessage}>
+                            <div
+                                class="message success-message modal-success-message"
+                                role="status">
+
+                                <div class="modal-message-icon">
+                                    ✓
+                                </div>
+
+                                <div class="modal-message-content">
+                                    <strong>
+                                        Assignment completed
+                                    </strong>
+
+                                    <p>
+                                        {bidModalMessage}
+                                    </p>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template if:true={bidModalError}>
+                            <div
+                                class="message error-message modal-error-message"
+                                role="alert">
+                                {bidModalError}
+                            </div>
+                        </template>
+                    </div>
+
+                    <footer class="slds-modal__footer modal-footer">
+                        <lightning-button
+                            class="modal-neutral-button"
+                            label="Close"
+                            variant="neutral"
+                            onclick={closeBidModal}
+                            disabled={assigningBid}>
+                        </lightning-button>
+
+                        <template if:true={showAssignButton}>
+                            <lightning-button
+                                class="modal-primary-button"
+                                label="Assign carrier"
+                                variant="brand"
+                                onclick={handleAssignBid}
+                                disabled={disableAssignBid}>
+                            </lightning-button>
+                        </template>
+                    </footer>
+                </div>
+            </section>
+
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <!-- LOAD DETAILS POPUP -->
+        <template if:true={showDetailsModal}>
+            <section
+                role="dialog"
+                tabindex="-1"
+                aria-modal="true"
+                aria-labelledby="load-modal-title"
+                class="slds-modal slds-fade-in-open">
+
+                <div class="slds-modal__container load-modal">
+                    <header class="slds-modal__header load-modal-header">
+                        <p class="modal-kicker">
+                            Load details
+                        </p>
+
+                        <h2
+                            id="load-modal-title"
+                            class="slds-text-heading_medium">
+                            {selectedLoad.loadNumber}
+                        </h2>
+                    </header>
+
+                    <div class="slds-modal__content modal-content">
+                        <div class="modal-route">
+                            <div>
+                                <span class="detail-label">
+                                    Pickup
+                                </span>
+
+                                <h3>{selectedLoad.origin}</h3>
+
+                                <p>
+                                    {selectedLoad.pickupDateFormatted}
+                                </p>
+                            </div>
+
+                            <div>
+                                <span class="detail-label">
+                                    Delivery
+                                </span>
+
+                                <h3>{selectedLoad.destination}</h3>
+
+                                <p>
+                                    {selectedLoad.deliveryDateFormatted}
+                                </p>
+                            </div>
+                        </div>
+
+                        <dl class="modal-details">
+                            <div>
+                                <dt>Status</dt>
+                                <dd>{selectedLoad.loadStatus}</dd>
+                            </div>
+
+                            <div>
+                                <dt>Trailer</dt>
+                                <dd>{selectedLoad.trailerDisplay}</dd>
+                            </div>
+
+                            <div>
+                                <dt>Weight</dt>
+                                <dd>{selectedLoad.weightFormatted}</dd>
+                            </div>
+
+                            <div>
+                                <dt>Miles</dt>
+                                <dd>{selectedLoad.milesFormatted}</dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <footer class="slds-modal__footer modal-footer">
+                        <lightning-button
+                            class="modal-neutral-button"
+                            label="Close"
+                            variant="neutral"
+                            onclick={closeDetailsModal}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </main>
+</template>

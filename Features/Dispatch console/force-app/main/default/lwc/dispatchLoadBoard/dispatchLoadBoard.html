@@ -1,0 +1,265 @@
+<template>
+    <section class="board-wrap">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading dispatch page" size="small"></lightning-spinner>
+        </template>
+        <template if:true={errorMessage}>
+            <div class="empty-state large-empty">{errorMessage}</div>
+        </template>
+        <div class="toolbar">
+            <div class="input-wrap search-wrap">
+                <label>Search Loads</label>
+                <input
+                    type="search"
+                    value={searchKey}
+                    oninput={handleSearchChange}
+                    placeholder="Search by load name, customer, city, state, carrier, driver, or 3-digit ZIP..." />
+            </div>
+
+            <div class="input-wrap state-input">
+                <lightning-combobox
+                    name="state"
+                    label="State / Province"
+                    value={localStateCode}
+                    placeholder="All States / Provinces"
+                    options={stateOptions}
+                    onchange={handleStateChange}
+                    variant="label-stacked">
+                </lightning-combobox>
+            </div>
+
+            <label class="auto-refresh">
+                <input
+                    type="checkbox"
+                    checked={autoRefreshEnabled}
+                    onchange={handleAutoRefreshToggle} />
+                <span>Auto Refresh · 30s</span>
+            </label>
+            
+            <button class="ghost-btn" onclick={handleRefresh}>Refresh Now</button>
+            <span class="refresh-time">{lastRefreshedLabel}</span>
+        </div>
+
+        <section class="kpi-grid">
+            <article class="kpi-card hero-kpi">
+                <span>Active Loads</span>
+                <strong>{activeLoadCount}</strong>
+                <small>{activeLoadLabel}</small>
+            </article>
+
+            <article class="kpi-card alert-kpi">
+                <span>Exceptions</span>
+                <strong class="danger">{exceptionCount}</strong>
+                <small>{exceptionLabel}</small>
+            </article>
+
+            <article class="kpi-card">
+                <span>Avg Margin</span>
+                <strong>{avgMargin}%</strong>
+                <small>{marginLabel}</small>
+            </article>
+
+            <article class="kpi-card">
+                <span>Invoice Ready</span>
+                <strong>{invoiceReadyLabel}</strong>
+                <small>{invoicePendingLabel}</small>
+            </article>
+
+            <article class="kpi-card">
+                <span>On-Time</span>
+                <strong>{onTimePercent}%</strong>
+                <small>Estimated performance</small>
+            </article>
+        </section>
+
+        <div class="view-bar">
+            <button class={allViewClass} data-view="all" onclick={handleViewChange}>
+                All Loads
+            </button>
+
+            <button class={exceptionViewClass} data-view="exceptions" onclick={handleViewChange}>
+                Exceptions
+            </button>
+
+            <button class={invoiceViewClass} data-view="invoiceReady" onclick={handleViewChange}>
+                Invoice Ready
+            </button>
+
+            <button class={unassignedViewClass} data-view="unassigned" onclick={handleViewChange}>
+                Unassigned
+            </button>
+
+            <button class={lowMarginViewClass} data-view="lowMargin" onclick={handleViewChange}>
+                Low Margin
+            </button>
+
+            <span class="view-count">{totalRecords} loads found</span>
+        </div>
+
+        <section class="content-grid">
+            <div class="board-panel">
+                <div class="table-header">
+                    <span>Load</span>
+                    <span>Route</span>
+                    <span>Status</span>
+                    <span>Invoice</span>
+                    <span>Margin</span>
+                </div>
+
+                <template if:true={hasLoads}>
+                    <template for:each={paginatedLoadRows} for:item="load">
+                        <article
+                            key={load.Id}
+                            class={load.rowClass}
+                            data-id={load.Id}
+                            onclick={handleLoadSelect}>
+                            <div class="load-number">{load.Name}</div>
+
+                            <div class="route-cell">
+                                <strong>{load.route}</strong>
+                                <small>{load.assignment}</small>
+                            </div>
+
+                            <div>
+                                <span class={load.statusClass}>
+                                    <span class="status-dot"></span>
+                                    {load.status}
+                                </span>
+                            </div>
+
+                            <div class="invoice-cell">
+                                <strong>{load.invoiceStatus}</strong>
+                                <small>{load.billStatus}</small>
+                            </div>
+
+                            <div class={load.marginClass}>{load.margin}</div>
+                        </article>
+                    </template>
+                </template>
+
+                <template if:false={hasLoads}>
+                    <div class="empty-state large-empty">
+                        No loads found for the selected filters.
+                    </div>
+                </template>
+
+                <template if:true={hasLoads}>
+                    <div class="pagination-bar">
+                        <span>{pageRangeLabel}</span>
+
+                        <div class="pagination-controls">
+                            <button onclick={handleFirstPage} disabled={previousDisabled} title="First page">«</button>
+                            <button onclick={handlePreviousPage} disabled={previousDisabled}>Previous</button>
+                            <strong>Page {pageNumber} of {totalPages}</strong>
+                            <button onclick={handleNextPage} disabled={nextDisabled}>Next</button>
+                            <button onclick={handleLastPage} disabled={nextDisabled} title="Last page">»</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <aside class="detail-panel">
+                <template if:true={selectedLoad}>
+                    <div class="detail-header">
+                        <div>
+                            <p class="panel-label">Selected Load</p>
+                            <h2>{selectedLoad.Name}</h2>
+                        </div>
+
+                        <span class={selectedLoad.statusClass}>
+                            <span class="status-dot"></span>
+                            {selectedLoad.status}
+                        </span>
+                    </div>
+
+                    <div class="detail-actions">
+                        <button onclick={handleOpenLoad}>Open Load</button>
+                        <button onclick={handleEmailCarrier} disabled={isEmailDisabled}>Email Carrier</button>
+                        <button onclick={handlePingDriver}>Ping Driver 💬📍</button>
+                        <button onclick={handleGenerateInvoice}>Generate Invoice</button>
+                    </div>
+
+                    <div class="detail-grid">
+                        <div>
+                            <span>Customer</span>
+                            <strong>{selectedLoad.customerName}</strong>
+                        </div>
+
+                        <div>
+                            <span>Carrier</span>
+                            <strong>{selectedLoad.carrierName}</strong>
+                        </div>
+
+                        <div>
+                            <span>Driver</span>
+                            <strong>{selectedLoad.driverName}</strong>
+                        </div>
+
+                        <div>
+                            <span>Truck</span>
+                            <strong>{selectedLoad.truckName}</strong>
+                        </div>
+
+                        <div>
+                            <span>Invoice Status</span>
+                            <strong>{selectedLoad.invoiceStatus}</strong>
+                        </div>
+
+                        <div>
+                            <span>Bill Status</span>
+                            <strong>{selectedLoad.billStatus}</strong>
+                        </div>
+
+                        <div>
+                            <span>POD Received</span>
+                            <strong>{selectedLoad.podLabel}</strong>
+                        </div>
+
+                        <div>
+                            <span>Gross Margin</span>
+                            <strong>{selectedLoad.grossMargin}</strong>
+                        </div>
+
+                        <div>
+                            <span>Gross Margin %</span>
+                            <strong>{selectedLoad.margin}</strong>
+                        </div>
+
+                        <div>
+                            <span>Pickup Date</span>
+                            <strong>{selectedLoad.pickupDateLabel}</strong>
+                        </div>
+
+                        <div>
+                            <span>Delivery Date</span>
+                            <strong>{selectedLoad.deliveryDateLabel}</strong>
+                        </div>
+
+                        <div>
+                            <span>Assignment</span>
+                            <strong>{selectedLoad.assignment}</strong>
+                        </div>
+                    </div>
+
+                    <div class="route-box">
+                        <span>Route</span>
+                        <strong>{selectedLoad.route}</strong>
+                    </div>
+
+                    <template if:true={selectedLoad.exceptionReason}>
+                        <div class="exception-box">
+                            <span>Exception</span>
+                            <strong>{selectedLoad.exceptionReason}</strong>
+                        </div>
+                    </template>
+                </template>
+
+                <template if:false={selectedLoad}>
+                    <div class="empty-detail">
+                        Select a load to view customer, carrier, driver, status, invoice, POD, margin, and available actions.
+                    </div>
+                </template>
+            </aside>
+        </section>
+    </section>
+</template>

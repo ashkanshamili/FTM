@@ -1,0 +1,65 @@
+<template>
+    <section class="dispatch-map-card">
+        <header class="map-card-header">
+            <div>
+                <p class="eyebrow">{mapEyebrow}</p>
+                <h2>{mapTitle}</h2>
+            </div>
+
+            <div class="map-meta">
+                <span>{markerCount} markers</span>
+            </div>
+        </header>
+
+        <div class="map-legend">
+            <span>
+                <i class="legend-dot red"></i>
+                Selected resource
+            </span>
+
+            <span>
+                <i class="legend-dot blue"></i>
+                Selected load point
+            </span>
+        </div>
+
+        <div class="map-container">
+            <template if:true={hasMarker}>
+                <lightning-map
+                    map-markers={mapMarkers}
+                    zoom-level="6"
+                    list-view="hidden">
+                </lightning-map>
+            </template>
+
+            <template if:false={hasMarker}>
+                <div class="empty-message">
+                    Select a truck, driver, or carrier to show the red resource point. Then select loads to show one blue point per load.
+                </div>
+            </template>
+        </div>
+    </section>
+</template>
+
+
+
+
+<!--<template>
+    <lightning-card title={mapTitle} icon-name={cardIcon}>
+        <div class="map-container">
+            <template if:true={hasMarker}>
+                <lightning-map
+                    map-markers={mapMarkers}
+                    zoom-level="8"
+                    list-view="hidden">
+                </lightning-map>
+            </template>
+
+            <template if:false={hasMarker}>
+                <div class="empty-message">
+                    Select a truck, driver, or carrier, then select loads to display matching pickup or delivery points.
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>-->

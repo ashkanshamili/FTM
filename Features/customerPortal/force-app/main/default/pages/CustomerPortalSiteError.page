@@ -1,0 +1,11 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" cache="false">
+<apex:composition template="CustomerPortalSiteTemplate">
+    <apex:define name="body">
+        <div class="cp-site-shell"><div class="cp-site-card">
+            <h1>Customer Portal</h1>
+            <p>The requested portal page is not available. Check the address or return to the Customer Portal.</p>
+            <a href="{!$Site.BaseUrl}">Return to Customer Portal</a>
+        </div></div>
+    </apex:define>
+</apex:composition>
+</apex:page>

@@ -1,0 +1,489 @@
+<template>
+    <div class="workspace-shell">
+        <template if:true={isLoading}>
+            <div class="loading-state">
+                <lightning-spinner alternative-text="Loading quote workspace" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:true={errorMessage}>
+            <div class="alert error" role="alert">
+                <lightning-icon icon-name="utility:error" size="x-small" alternative-text="Error"></lightning-icon>
+                <div>{errorMessage}</div>
+            </div>
+        </template>
+
+        <template if:true={data}>
+            <section class="quote-hero">
+                <div class="hero-heading-row">
+                    <div class="quote-kicker">
+                        <span class="quote-dot"></span>
+                        <span>Lane Quote</span>
+                        <span class="kicker-divider">·</span>
+                        <strong>{data.quoteNumber}</strong>
+                        <span class="kicker-divider">·</span>
+                        <span>{data.workflowStatus}</span>
+                    </div>
+                    <div class="status-stack">
+                        <span class={workflowBadgeClass}>{data.workflowStatus}</span>
+                        <span class="native-status">Native status: {safeNativeStatus}</span>
+                    </div>
+                </div>
+
+                <div class="hero-content-grid">
+                    <div class="lane-overview">
+                        <p class="customer-name">{safeCustomerName}</p>
+                        <p class="customer-meta">{customerRelationship}</p>
+                        <h2>{data.route}</h2>
+                        <div class="lane-meta-row">
+                            <span>
+                                <lightning-icon icon-name="utility:truck" size="xx-small" alternative-text="Equipment"></lightning-icon>
+                                {equipmentSummary}
+                            </span>
+                            <span>
+                                <lightning-icon icon-name="utility:database" size="xx-small" alternative-text="History"></lightning-icon>
+                                {historySummaryLabel}
+                            </span>
+                            <span>
+                                <lightning-icon icon-name="utility:user" size="xx-small" alternative-text="Owner"></lightning-icon>
+                                Owner: {safeOwnerName}
+                            </span>
+                        </div>
+                    </div>
+
+                    <aside class={decisionPanelClass}>
+                        <p class="decision-label">Pricing decision</p>
+                        <strong>{safeRecommendedAction}</strong>
+                        <span class={decisionPillClass}>{safeDecisionStatus}</span>
+                        <p class="decision-detail">{safePricingSource} · {safePricingConfidence} confidence</p>
+                    </aside>
+                </div>
+
+                <div class="primary-metric-grid">
+                    <article class="primary-metric">
+                        <p>Quoted Rate</p>
+                        <strong>{formattedCustomerRate}</strong>
+                        <span>Customer-facing amount</span>
+                    </article>
+                    <article class="primary-metric">
+                        <p>Est. Cost</p>
+                        <strong>{formattedCarrierCost}</strong>
+                        <span>Internal carrier cost</span>
+                    </article>
+                    <article class={marginMetricClass}>
+                        <p>Est. Margin</p>
+                        <strong>{formattedMargin}</strong>
+                        <span>{marginMetricSubtitle}</span>
+                    </article>
+                    <article class="primary-metric suggested-metric">
+                        <p>Suggested Rate</p>
+                        <strong>{formattedSuggestedRate}</strong>
+                        <span>{safePricingSource}</span>
+                    </article>
+                </div>
+
+                <div class="recent-history-card">
+                    <div class="recent-history-header">
+                        <div>
+                            <p class="section-kicker">Recent lane history</p>
+                            <strong>{historySummaryLabel}</strong>
+                        </div>
+                        <span class="confidence-pill">{safePricingConfidence} confidence</span>
+                    </div>
+
+                    <template if:true={hasRecentHistory}>
+                        <div class="table-scroll compact-table-scroll">
+                            <table class="history-table compact-history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Load</th>
+                                        <th>Rate</th>
+                                        <th>Cost</th>
+                                        <th>Margin</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={recentHistoryRows} for:item="row">
+                                        <tr key={row.loadId}>
+                                            <td>{row.pickupDate}</td>
+                                            <td>{row.loadNumber}</td>
+                                            <td>{row.formattedRate}</td>
+                                            <td>{row.formattedCarrierCost}</td>
+                                            <td><span class={row.marginClass}>{row.formattedMargin}</span></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <template if:false={hasRecentHistory}>
+                        <p class="hero-empty-state">No exact lane history yet. FTM will use tariff, similar shipment, cost, and fallback signals.</p>
+                    </template>
+
+                    <div class={readinessBarClass}>
+                        <lightning-icon icon-name={readinessIcon} size="x-small" alternative-text="Quote readiness"></lightning-icon>
+                        <span>{readinessText}</span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="alert-stack">
+                <template if:true={data.blockingMessages.length}>
+                    <section class="alert warning" role="alert">
+                        <lightning-icon icon-name="utility:warning" size="x-small" alternative-text="Warning"></lightning-icon>
+                        <div>
+                            <strong>Before sending, fix:</strong>
+                            <ul>
+                                <template for:each={data.blockingMessages} for:item="message">
+                                    <li key={message}>{message}</li>
+                                </template>
+                            </ul>
+                        </div>
+                    </section>
+                </template>
+
+                <template if:true={data.warningMessages.length}>
+                    <section class="alert info" role="status">
+                        <lightning-icon icon-name="utility:info" size="x-small" alternative-text="Information"></lightning-icon>
+                        <div>
+                            <strong>Pricing warnings:</strong>
+                            <ul>
+                                <template for:each={data.warningMessages} for:item="message">
+                                    <li key={message}>{message}</li>
+                                </template>
+                            </ul>
+                        </div>
+                    </section>
+                </template>
+            </div>
+
+            <section class="workflow-panel">
+                <div class="workflow-top-row">
+                    <div>
+                        <p class="section-kicker">Quote workflow</p>
+                        <h3>Move the quote from pricing to load creation</h3>
+                    </div>
+                    <div class="next-action-callout"><span>Next step</span><strong>{safeNextAction}</strong></div>
+                </div>
+
+                <div class="workflow-steps" aria-label="Quote workflow progress">
+                    <template for:each={workflowSteps} for:item="step">
+                        <div class={step.className} key={step.key}>
+                            <span class="step-marker">{step.marker}</span>
+                            <span class="step-label">{step.label}</span>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="action-toolbar">
+                    <div class="action-toolbar-label">
+                        <span>Available actions</span>
+                        <small>Only actions valid for the current stage are shown.</small>
+                    </div>
+                    <div class="action-group primary-actions">
+                        <template if:true={showCalculateAction}>
+                            <lightning-button class="calculate-button" label="Calculate Quote" variant="brand" icon-name="utility:refresh" onclick={handleCalculate} disabled={calculateDisabled}></lightning-button>
+                        </template>
+                        <template if:true={showRequestApprovalAction}>
+                            <lightning-button class="approval-button" label="Request Approval" variant="brand" icon-name="utility:approval" onclick={handleRequestApproval} disabled={requestApprovalDisabled}></lightning-button>
+                        </template>
+                        <template if:true={showApprovalDecisionActions}>
+                            <lightning-button class="approve-button" label="Approve" variant="brand" icon-name="utility:check" onclick={handleApprove} disabled={approveDisabled}></lightning-button>
+                            <lightning-button label="Reject Approval" icon-name="utility:close" onclick={handleRejectApproval} disabled={approveDisabled}></lightning-button>
+                        </template>
+                        <template if:true={showMarkSentAction}>
+                            <lightning-button class="send-button" label="Mark Sent" variant={markSentVariant} icon-name="utility:send" onclick={handleMarkSent} disabled={markSentDisabled}></lightning-button>
+                        </template>
+                        <template if:true={showEditRequiredFieldsAction}>
+                            <lightning-button class="edit-required-button" label="Edit Required Fields" icon-name="utility:edit" onclick={handleEditQuote}></lightning-button>
+                        </template>
+                        <template if:true={showCustomerResponseActions}>
+                            <lightning-button class="accept-button" label="Mark Accepted" variant="brand" icon-name="utility:success" onclick={handleMarkAccepted} disabled={markAcceptedDisabled}></lightning-button>
+                            <lightning-button label="Mark Declined" icon-name="utility:ban" onclick={openDeclineModal} disabled={markDeclinedDisabled}></lightning-button>
+                        </template>
+                        <template if:true={showConvertAction}>
+                            <lightning-button class="convert-button" label="Convert to Load" variant="brand" icon-name="utility:truck" onclick={handleConvertToLoad} disabled={convertDisabled}></lightning-button>
+                        </template>
+                        <template if:false={hasAvailableActions}>
+                            <p class="action-complete">{noActionMessage}</p>
+                        </template>
+                    </div>
+                    <template if:true={showActionBlockerPanel}>
+                        <div class="action-blocker-panel" role="status">
+                            <lightning-icon icon-name="utility:warning" size="x-small" alternative-text="Required fields"></lightning-icon>
+                            <div>
+                                <strong>{blockerPanelTitle}</strong>
+                                <span>{blockerPanelMessage}</span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <section class="intelligence-section">
+                <div class="section-title-row">
+                    <div>
+                        <p class="section-kicker">Pricing intelligence</p>
+                        <h3>What FTM checked before recommending the rate</h3>
+                    </div>
+                    <span class="last-calculated">Last calculated: {safeLastCalculatedAt}</span>
+                </div>
+
+                <div class="intelligence-grid">
+                    <article class={confidenceCardClass}>
+                        <span class="intel-icon"><lightning-icon icon-name="utility:confidence" size="small" alternative-text="Confidence"></lightning-icon></span>
+                        <p>Pricing Confidence</p>
+                        <strong>{safePricingConfidence}</strong>
+                        <small>{safePricingSource}</small>
+                    </article>
+                    <article class="intel-card">
+                        <span class="intel-icon"><lightning-icon icon-name="utility:table" size="small" alternative-text="Tariff"></lightning-icon></span>
+                        <p>Tariff Rate</p>
+                        <strong>{formattedTariffRate}</strong>
+                        <small>{safeTariffSource}</small>
+                    </article>
+                    <article class={accessorialCardClass}>
+                        <span class="intel-icon"><lightning-icon icon-name="utility:moneybag" size="small" alternative-text="Accessorial risk"></lightning-icon></span>
+                        <p>Accessorial Risk</p>
+                        <strong>{safeAccessorialRisk}</strong>
+                        <small>Prior charge and pay signals</small>
+                    </article>
+                    <article class={serviceCardClass}>
+                        <span class="intel-icon"><lightning-icon icon-name="utility:clock" size="small" alternative-text="Service risk"></lightning-icon></span>
+                        <p>Service Risk</p>
+                        <strong>{safeServiceIssueRisk}</strong>
+                        <small>Exceptions, delays, and POD</small>
+                    </article>
+                    <article class="intel-card">
+                        <span class="intel-icon"><lightning-icon icon-name="utility:chart" size="small" alternative-text="Win rate"></lightning-icon></span>
+                        <p>Quote Win Rate</p>
+                        <strong>{formattedQuoteWinRate}</strong>
+                        <small>{data.priorQuoteCount} prior quote(s)</small>
+                    </article>
+                    <article class={approvalCardClass}>
+                        <span class="intel-icon"><lightning-icon icon-name="utility:approval" size="small" alternative-text="Approval"></lightning-icon></span>
+                        <p>Approval</p>
+                        <strong>{safeApprovalStatus}</strong>
+                        <small>{approvalRequiredText}</small>
+                    </article>
+                </div>
+            </section>
+
+            <section class="content-grid">
+                <div class="panel intake-panel">
+                    <div class="panel-header">
+                        <div>
+                            <p class="section-kicker">Quote intake</p>
+                            <h3>Shipment and pricing inputs</h3>
+                        </div>
+                        <span class="panel-hint">{pricingModeText}</span>
+                    </div>
+
+                    <lightning-record-edit-form object-api-name="FreightTM__Lane_Quote__c" record-id={recordId} onsuccess={handleNativeSave} onerror={handleNativeError}>
+                        <lightning-messages></lightning-messages>
+                        <template if:true={data.pricingLocked}>
+                            <div class="form-lock-notice">
+                                <lightning-icon icon-name="utility:lock" size="x-small" alternative-text="Locked"></lightning-icon>
+                                <span>{pricingModeText}. Create a revision before changing approved or customer-facing pricing.</span>
+                            </div>
+                        </template>
+                        <div class="form-section">
+                            <h4>Customer and reference</h4>
+                            <div class="form-grid">
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Customer__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Carrier__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Contract__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Order__c"></lightning-input-field>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>Pickup and delivery</h4>
+                            <div class="form-grid">
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Pickup_City__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Pickup_State__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Pickup_Zip_Code__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Estimated_Pickup_Time__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Delivery_City__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Delivery_State__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Delivery_Zip_Code__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Estimated_Delivery_Time__c"></lightning-input-field>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>Freight details</h4>
+                            <div class="form-grid">
+                                <lightning-input-field disabled={data.pricingLocked} field-name="Equipment_Type__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="Service_Level__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Weight__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="Pallet_Count__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} class="full-width-field" field-name="Commodity__c"></lightning-input-field>
+                            </div>
+                        </div>
+
+                        <div class="form-section pricing-inputs">
+                            <h4>Rate and margin controls</h4>
+                            <div class="form-grid">
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Customer_Rate__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="FreightTM__Rate_to_Carrier__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="Minimum_Margin_Percent__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} field-name="Target_Margin_Percent__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} class="full-width-field" field-name="Override_Reason__c"></lightning-input-field>
+                                <lightning-input-field disabled={data.pricingLocked} class="full-width-field" field-name="Internal_Quote_Notes__c"></lightning-input-field>
+                            </div>
+                        </div>
+
+                        <div class="form-footer">
+                            <lightning-button class="save-button" type="submit" disabled={data.pricingLocked} variant="brand" icon-name="utility:save" label="Save Quote Fields"></lightning-button>
+                            <span>Recalculate after changing the rate, cost, lane, equipment, or contract.</span>
+                        </div>
+                    </lightning-record-edit-form>
+                </div>
+
+                <aside class="panel context-panel">
+                    <div class="panel-header">
+                        <div>
+                            <p class="section-kicker">Context and intelligence</p>
+                            <h3>Why FTM recommended this price</h3>
+                        </div>
+                    </div>
+
+                    <div class="context-block explanation">
+                        <div class="context-title">
+                            <span class="context-number">01</span>
+                            <p>Why This Price</p>
+                        </div>
+                        <pre>{safePricingExplanation}</pre>
+                    </div>
+                    <div class="context-block explanation">
+                        <div class="context-title">
+                            <span class="context-number">02</span>
+                            <p>Recommended Action</p>
+                        </div>
+                        <pre>{safeRecommendedAction}</pre>
+                    </div>
+                    <div class="context-block">
+                        <div class="context-title"><span class="context-number">03</span><p>Customer Context</p></div>
+                        <pre>{safeCustomerContext}</pre>
+                    </div>
+                    <div class="context-block">
+                        <div class="context-title"><span class="context-number">04</span><p>Shipment Context</p></div>
+                        <pre>{safeShipmentContext}</pre>
+                    </div>
+                    <div class="context-block">
+                        <div class="context-title"><span class="context-number">05</span><p>Tariff Match</p></div>
+                        <pre>{safeTariffMatchDetail}</pre>
+                    </div>
+                    <div class="context-block">
+                        <div class="context-title"><span class="context-number">06</span><p>Contract / Customer Terms</p></div>
+                        <pre>{safeContractContext}</pre>
+                    </div>
+                    <div class="context-block">
+                        <div class="context-title"><span class="context-number">07</span><p>Accessorial Risk</p></div>
+                        <pre>{safeAccessorialRiskSummary}</pre>
+                    </div>
+                    <div class="context-block">
+                        <div class="context-title"><span class="context-number">08</span><p>Service Issue Risk</p></div>
+                        <pre>{safeServiceIssueSummary}</pre>
+                    </div>
+                    <div class="context-block">
+                        <div class="context-title"><span class="context-number">09</span><p>Quote Outcome History</p></div>
+                        <pre>{safeQuoteHistorySummary}</pre>
+                    </div>
+                    <details class="pricing-log-details">
+                        <summary>View full pricing log</summary>
+                        <pre>{safePricingLog}</pre>
+                    </details>
+                </aside>
+            </section>
+
+            <section class="panel full-history-panel">
+                <div class="section-title-row">
+                    <div>
+                        <p class="section-kicker">Lane intelligence</p>
+                        <h3>Historical performance for {data.route}</h3>
+                        <p class="muted">Exact customer lane: {data.priorLoadCount} prior load(s)</p>
+                    </div>
+                    <span class="confidence-pill">Confidence: {safePricingConfidence}</span>
+                </div>
+
+                <div class="history-stat-grid">
+                    <div><span>Avg rate</span><strong>{formattedAverageRate}</strong></div>
+                    <div><span>Avg cost</span><strong>{formattedAverageCost}</strong></div>
+                    <div><span>Avg margin</span><strong>{formattedAverageMargin}</strong></div>
+                    <div><span>Last rate</span><strong>{formattedLastLaneRate}</strong></div>
+                    <div><span>Last cost</span><strong>{formattedLastLaneCost}</strong></div>
+                    <div><span>Similar loads</span><strong>{safeSimilarShipmentCount}</strong></div>
+                </div>
+
+                <div class="similar-summary">
+                    <span>Similar avg rate: <strong>{formattedAverageSimilarRate}</strong></span>
+                    <span>Similar avg cost: <strong>{formattedAverageSimilarCost}</strong></span>
+                    <span>Similar avg margin: <strong>{formattedAverageSimilarMargin}</strong></span>
+                </div>
+
+                <template if:true={hasHistoryRows}>
+                    <div class="table-scroll">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Load</th>
+                                    <th>Status</th>
+                                    <th>Pickup</th>
+                                    <th>Delivery</th>
+                                    <th>Rate</th>
+                                    <th>Carrier Cost</th>
+                                    <th>Margin</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={historyRowsForDisplay} for:item="row">
+                                    <tr key={row.loadId}>
+                                        <td><strong>{row.loadNumber}</strong></td>
+                                        <td>{row.status}</td>
+                                        <td>{row.pickupDate}</td>
+                                        <td>{row.deliveryDate}</td>
+                                        <td>{row.formattedRate}</td>
+                                        <td>{row.formattedCarrierCost}</td>
+                                        <td><span class={row.marginClass}>{row.formattedMargin}</span></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+                <template if:false={hasHistoryRows}>
+                    <p class="empty-state">No exact prior loads found for this customer lane yet.</p>
+                </template>
+            </section>
+
+            <template if:true={data.convertedLoadId}>
+                <section class="alert success converted-alert">
+                    <lightning-icon icon-name="utility:success" size="x-small" alternative-text="Converted"></lightning-icon>
+                    <div>Converted to Load: <strong>{data.convertedLoadName}</strong>. Original quote values and pricing context were copied to the Load.</div>
+                </section>
+            </template>
+        </template>
+    </div>
+
+    <template if:true={showNoteModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container modal-container">
+                <header class="slds-modal__header modal-header">
+                    <p class="section-kicker">Quote workflow</p>
+                    <h2 class="slds-text-heading_medium">{modalTitle}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium modal-content">
+                    <lightning-textarea label={modalLabel} value={noteValue} onchange={handleNoteChange}></lightning-textarea>
+                </div>
+                <footer class="slds-modal__footer modal-footer">
+                    <lightning-button label="Cancel" onclick={closeNoteModal}></lightning-button>
+                    <lightning-button class="slds-m-left_small" variant="brand" label="Submit" onclick={submitNoteAction} disabled={actionInProgress}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

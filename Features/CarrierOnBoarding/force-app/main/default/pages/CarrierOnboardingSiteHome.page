@@ -1,0 +1,106 @@
+<apex:page showHeader="false"
+           sidebar="false"
+           standardStylesheets="false"
+           docType="html-5.0"
+           applyHtmlTag="false"
+           applyBodyTag="false">
+
+    <html>
+        <head>
+            <title>Carrier Onboarding</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+            <style>
+                html,
+                body {
+                    margin: 0;
+                    padding: 0;
+                    background: #f4f6f9;
+                    font-family: Arial, Helvetica, sans-serif;
+                    min-height: 100%;
+                }
+
+                #carrierOnboardingContainer {
+                    min-height: 100vh;
+                }
+
+                .loading-box {
+                    padding: 40px;
+                    text-align: center;
+                    color: #1f2937;
+                    font-size: 16px;
+                }
+
+                .error-box {
+                    margin: 24px;
+                    padding: 16px;
+                    border: 1px solid #fecaca;
+                    border-radius: 10px;
+                    background: #fef2f2;
+                    color: #991b1b;
+                    font-weight: 600;
+                    display: none;
+                }
+            </style>
+        </head>
+
+        <body>
+            <div id="carrierOnboardingError" class="error-box">
+                Carrier Onboarding could not be loaded. Please contact support.
+            </div>
+
+            <div id="loadingMessage" class="loading-box">
+                Loading Carrier Onboarding...
+            </div>
+
+            <div id="carrierOnboardingContainer"></div>
+
+            <apex:includeLightning />
+
+            <script>
+                (function () {
+                    function showError(error) {
+                        console.error("Carrier Onboarding load error:", error);
+
+                        var loadingMessage = document.getElementById("loadingMessage");
+                        if (loadingMessage) {
+                            loadingMessage.style.display = "none";
+                        }
+
+                        var errorBox = document.getElementById("carrierOnboardingError");
+                        if (errorBox) {
+                            errorBox.style.display = "block";
+                        }
+                    }
+
+                    try {
+                        $Lightning.use(
+                            "c:CarrierOnboardingOutApp",
+                            function () {
+                                $Lightning.createComponent(
+                                    "c:carrierOnboarding",
+                                    {},
+                                    "carrierOnboardingContainer",
+                                    function (component, status, errorMessage) {
+                                        if (status === "SUCCESS") {
+                                            console.log("Carrier Onboarding component loaded.");
+
+                                            var loadingMessage = document.getElementById("loadingMessage");
+                                            if (loadingMessage) {
+                                                loadingMessage.style.display = "none";
+                                            }
+                                        } else {
+                                            showError(errorMessage || status);
+                                        }
+                                    }
+                                );
+                            }
+                        );
+                    } catch (error) {
+                        showError(error);
+                    }
+                })();
+            </script>
+        </body>
+    </html>
+</apex:page>

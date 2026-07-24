@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Prevent_Approved_AutoFill_Status_Change</fullName>
+    <active>true</active>
+    <description>Prevents an AutoFill-approved Load from moving back to Direct or Rejected.</description>
+    <errorConditionFormula>AND(ISCHANGED(AutoFill_Status__c), ISPICKVAL(PRIORVALUE(AutoFill_Status__c), &quot;Approved&quot;), NOT(ISPICKVAL(AutoFill_Status__c, &quot;Approved&quot;)))</errorConditionFormula>
+    <errorDisplayField>AutoFill_Status__c</errorDisplayField>
+    <errorMessage>Approved AutoFill loads cannot be changed back to another AutoFill status.</errorMessage>
+</ValidationRule>

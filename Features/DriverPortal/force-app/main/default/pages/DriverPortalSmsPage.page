@@ -1,0 +1,76 @@
+<apex:page standardController="FreightTM__Load__c"
+    extensions="DriverPortalSmsController"
+    lightningStylesheets="true"
+    showHeader="true"
+    sidebar="true">
+
+    <apex:form id="smsForm">
+        <apex:pageMessages id="messages"/>
+
+        <apex:pageBlock title="Send Driver Portal Link"
+            mode="edit">
+
+            <apex:pageBlockButtons location="both">
+                <apex:commandButton value="Send"
+                    action="{!sendPortalLink}"
+                    status="sendStatus"
+                    rerender="smsForm"/>
+
+                <apex:commandButton value="Cancel"
+                    action="{!cancel}"
+                    immediate="true"/>
+            </apex:pageBlockButtons>
+
+            <apex:actionStatus id="sendStatus">
+                <apex:facet name="start">
+                    <div class="sendingMessage">
+                        Saving and sending portal link...
+                    </div>
+                </apex:facet>
+            </apex:actionStatus>
+
+            <apex:pageBlockSection title="Driver Information"
+                columns="1">
+
+                <apex:inputField value="{!loadRecord.FreightTM__Driver__c}"
+                    label="Driver Name"
+                    required="true"/>
+
+                <apex:inputField value="{!loadRecord.Driver_Phone_Number__c}"
+                    label="Driver Phone"
+                    required="true"/>
+
+                <apex:inputField value="{!loadRecord.Driver_Phone_Carrier__c}"
+                    label="Driver Phone Carrier"
+                    required="true"/>
+
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="Portal Link"
+                columns="1"
+                collapsible="false">
+
+                <apex:outputLink value="{!loadRecord.Driver_Portal_Link__c}"
+                    target="_blank"
+                    rendered="{!NOT(ISBLANK(loadRecord.Driver_Portal_Link__c))}">
+                    {!loadRecord.Driver_Portal_Link__c}
+                </apex:outputLink>
+
+                <apex:outputText value="No driver portal link is available."
+                    rendered="{!ISBLANK(loadRecord.Driver_Portal_Link__c)}"/>
+
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+
+    <style>
+        .sendingMessage {
+            margin: 12px 0;
+            padding: 12px;
+            border: 1px solid #d8dde6;
+            border-radius: 4px;
+            background: #f3f3f3;
+            font-weight: 600;
+        }
+    </style>
+</apex:page>

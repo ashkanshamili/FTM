@@ -1,0 +1,95 @@
+<template>
+    <lightning-modal-header label={modalTitle}>
+    </lightning-modal-header>
+
+    <lightning-modal-body>
+        <div class="modal-content">
+            <template if:true={loadName}>
+                <div class="load-banner">
+                    <span>Selected Load</span>
+                    <strong>{loadName}</strong>
+                </div>
+            </template>
+
+            <lightning-record-picker
+                label="Driver Name"
+                placeholder="Search drivers..."
+                object-api-name="FreightTM__Employee__c"
+                value={selectedDriverId}
+                display-info={driverDisplayInfo}
+                matching-info={driverMatchingInfo}
+                onchange={handleDriverChange}
+                disabled={isSending}
+                required>
+            </lightning-record-picker>
+
+            <lightning-input
+                type="tel"
+                label="Driver Phone"
+                value={phoneNumber}
+                placeholder="Example: (555) 123-4567"
+                onchange={handlePhoneChange}
+                disabled={isSending}
+                required>
+            </lightning-input>
+
+            <lightning-combobox
+                name="carrier"
+                label="Driver Phone Carrier"
+                value={selectedCarrier}
+                placeholder="Select carrier"
+                options={carrierOptions}
+                onchange={handleCarrierChange}
+                disabled={isSending}
+                required>
+            </lightning-combobox>
+
+            <div class="portal-section">
+                <span class="field-label">Portal Link</span>
+
+                <template if:true={portalLink}>
+                    <a
+                        href={portalLink}
+                        target="_blank"
+                        rel="noopener noreferrer">
+                        {portalLink}
+                    </a>
+                </template>
+
+                <template if:false={portalLink}>
+                    <span class="missing-link">
+                        No portal link is available for this load.
+                    </span>
+                </template>
+            </div>
+
+            <div class="message-preview">
+                <span>Message Preview</span>
+                <p>{messagePreview}</p>
+            </div>
+
+            <template if:true={errorMessage}>
+                <div class="error-message" role="alert">
+                    {errorMessage}
+                </div>
+            </template>
+        </div>
+    </lightning-modal-body>
+
+    <lightning-modal-footer>
+        <lightning-button
+            label="Cancel"
+            variant="neutral"
+            onclick={handleCancel}
+            disabled={isSending}>
+        </lightning-button>
+
+        <lightning-button
+            label={sendButtonLabel}
+            variant="brand"
+            onclick={handleSend}
+            disabled={sendDisabled}
+            class="slds-m-left_small">
+        </lightning-button>
+    </lightning-modal-footer>
+</template>

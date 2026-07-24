@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Default</label>
+    <protected>false</protected>
+    <values><field>Token_Validity_Days__c</field><value xsi:type="xsd:double">14</value></values>
+    <values><field>Auto_Send_Email__c</field><value xsi:type="xsd:boolean">false</value></values>
+    <values><field>Auto_Send_SMS__c</field><value xsi:type="xsd:boolean">false</value></values>
+    <values><field>Company_Name__c</field><value xsi:type="xsd:string">FTM</value></values>
+    <values><field>Email_Subject__c</field><value xsi:type="xsd:string">New load assignment: {LOAD_NAME}</value></values>
+    <values><field>Sync_Driver_Contact__c</field><value xsi:type="xsd:boolean">true</value></values>
+</CustomMetadata>

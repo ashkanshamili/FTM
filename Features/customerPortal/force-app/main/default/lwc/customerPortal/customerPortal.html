@@ -1,0 +1,416 @@
+<template>
+    <main class="portal-shell">
+        <section class="portal-frame">
+            <template if:true={showLogin}>
+                <section class="login-card">
+                    <div class="login-copy">
+                        <p class="eyebrow">FTM Customer Portal</p>
+                        <h1>Customer freight visibility, directly from Salesforce.</h1>
+                        <p>Sign in with the username and password provided by your transportation team.</p>
+                    </div>
+                    <form class="login-form" onsubmit={handleLogin}>
+                        <label>Username</label>
+                        <input type="text" autocomplete="username" value={username} onchange={handleUsernameChange} />
+                        <label>Password</label>
+                        <input type="password" autocomplete="current-password" value={password} onchange={handlePasswordChange} />
+                        <template if:true={loginError}><p class="login-error">{loginError}</p></template>
+                        <button type="submit" class="primary-button" disabled={loginDisabled}>Log in</button>
+                    </form>
+                </section>
+            </template>
+
+            <template if:true={error}>
+                <div class="error-panel"><h1>Portal unavailable</h1><p>{error}</p></div>
+            </template>
+
+            <template if:true={hasData}>
+                <header class="portal-header">
+                    <div>
+                        <p class="eyebrow">Customer Portal · {context.customerName}</p>
+                        <h1>Freight visibility from the same Salesforce load record.</h1>
+                        <p>Shipments, tracking, documents, PODs, and invoices in one secure customer view.</p>
+                    </div>
+                    <button type="button" class="outline-button" onclick={handleLogout}>Log out</button>
+                </header>
+
+                <nav class="portal-nav" aria-label="Customer portal navigation">
+                    <a class={dashboardNavClass} href={dashboardUrl} data-page="dashboard" onclick={navigate}>Customer Portal</a>
+                    <a class={shipmentsNavClass} href={shipmentsUrl} data-page="shipments" onclick={navigate}>Current Shipments</a>
+                    <a class={trackingNavClass} href={trackingUrl} data-page="tracking" onclick={navigate}>Tracking</a>
+                    <a class={documentsNavClass} href={documentsUrl} data-page="documents" onclick={navigate}>Documents</a>
+                    <a class={invoicesNavClass} href={invoicesUrl} data-page="invoices" onclick={navigate}>Invoices</a>
+                </nav>
+
+                <template if:true={actionMessage}><div class="toast-line">{actionMessage}</div></template>
+
+                <section class="portal-content-shell">
+                    <template if:true={isDashboard}>
+                        <section class="page-card dashboard-page">
+                            <div class="section-heading">
+                                <p class="section-kicker">Customer Dashboard</p>
+                                <h2>Shipment dashboard with search and account visibility</h2>
+                                <p>Review active shipments, recent deliveries, documents, and invoices without waiting for an update.</p>
+                            </div>
+
+                            <div class="summary-grid">
+                                <article><span>Active Shipments</span><strong>{summary.activeShipments}</strong></article>
+                                <article><span>Delivered (30d)</span><strong>{summary.delivered30}</strong></article>
+                                <article><span>On-Time Rate</span><strong>{formattedOnTimeRate}</strong></article>
+                                <article><span>Open Invoices</span><strong>{openInvoiceCount}</strong></article>
+                            </div>
+
+                            <div class="search-row">
+                                <div class="search-box">
+                                    <input type="search" placeholder="Search" value={searchDraft} oninput={handleSearchInput} onkeydown={handleSearchKeydown} />
+                                    <button type="button" onclick={applySearch}>Search</button>
+                                </div>
+                            </div>
+
+                            <div class="table-shell">
+                                <div class="shipment-table-head dashboard-columns"><span>Shipment / PO</span><span>Route</span><span>Pickup</span><span>Status</span><span></span></div>
+                                <template if:true={hasShipments}>
+                                    <template for:each={pagedDashboardShipments} for:item="shipment">
+                                        <article class="shipment-row dashboard-columns" key={shipment.loadId}>
+                                            <div class="shipment-number"><span class="shipment-icon">▦</span><strong>{shipment.loadNumber}</strong></div>
+                                            <div><strong>{shipment.route}</strong></div>
+                                            <div>{shipment.pickupText}</div>
+                                            <div><span class={shipment.statusCellClass}><i class={shipment.statusClass}></i>{shipment.status}</span></div>
+                                            <button type="button" class="arrow-button" data-page="load" data-load-id={shipment.loadId} onclick={navigate} aria-label="View shipment">→</button>
+                                        </article>
+                                    </template>
+                                </template>
+                                <template if:false={hasShipments}><p class="empty-state">No matching shipments are available.</p></template>
+                            </div>
+                            <template if:true={dashboardPagination.show}><div class="pagination"><span>{dashboardPagination.label}</span><div><button type="button" data-target="dashboard" data-direction="-1" disabled={dashboardPagination.previousDisabled} onclick={handlePageChange}>Previous</button><strong>{dashboardPagination.page} / {dashboardPagination.totalPages}</strong><button type="button" data-target="dashboard" data-direction="1" disabled={dashboardPagination.nextDisabled} onclick={handlePageChange}>Next</button></div></div></template>
+                        </section>
+                    </template>
+
+                    <template if:true={isShipmentsPage}>
+                        <section class="page-card">
+                            <div class="section-heading inline-heading">
+                                <div><p class="section-kicker">Customer Dashboard</p><h2>Current Shipments</h2><p>Search active loads, references, and shipment history.</p></div>
+                                <div class="search-box compact-search"><input type="search" placeholder="Search" value={searchDraft} oninput={handleSearchInput} onkeydown={handleSearchKeydown}/><button type="button" onclick={applySearch}>Search</button></div>
+                            </div>
+
+                            <template if:true={hasCurrentShipments}>
+                                <section class="shipment-group">
+                                    <div class="group-heading"><div><p class="section-kicker">Current Loads</p><h3>Moving now</h3></div><span>{currentShipmentCount}</span></div>
+                                    <div class="table-shell">
+                                        <div class="shipment-table-head shipment-columns"><span>Shipment / PO</span><span>Route and Dates</span><span>Status</span><span>Action</span></div>
+                                        <template for:each={pagedCurrentShipments} for:item="shipment">
+                                            <article class="shipment-row shipment-columns" key={shipment.loadId}>
+                                                <div class="shipment-number"><span class="shipment-icon">▦</span><strong>{shipment.loadNumber}</strong></div>
+                                                <div><strong>{shipment.route}</strong><small>Pickup {shipment.pickupText} · Delivery {shipment.deliveryText}</small></div>
+                                                <div><span class={shipment.statusCellClass}><i class={shipment.statusClass}></i>{shipment.status}</span></div>
+                                                <button type="button" class="details-button" data-page="load" data-load-id={shipment.loadId} onclick={navigate}>Details</button>
+                                            </article>
+                                        </template>
+                                    </div>
+                                    <template if:true={currentPagination.show}><div class="pagination"><span>{currentPagination.label}</span><div><button type="button" data-target="current" data-direction="-1" disabled={currentPagination.previousDisabled} onclick={handlePageChange}>Previous</button><strong>{currentPagination.page} / {currentPagination.totalPages}</strong><button type="button" data-target="current" data-direction="1" disabled={currentPagination.nextDisabled} onclick={handlePageChange}>Next</button></div></div></template>
+                                </section>
+                            </template>
+
+                            <template if:true={hasFutureShipments}>
+                                <section class="shipment-group">
+                                    <div class="group-heading"><div><p class="section-kicker">Future Loads</p><h3>Assigned and upcoming</h3></div><span>{futureShipmentCount}</span></div>
+                                    <div class="table-shell">
+                                        <div class="shipment-table-head shipment-columns"><span>Shipment / PO</span><span>Route and Dates</span><span>Status</span><span>Action</span></div>
+                                        <template for:each={pagedFutureShipments} for:item="shipment">
+                                            <article class="shipment-row shipment-columns" key={shipment.loadId}>
+                                                <div class="shipment-number"><span class="shipment-icon">▦</span><strong>{shipment.loadNumber}</strong></div>
+                                                <div><strong>{shipment.route}</strong><small>Pickup {shipment.pickupText} · Delivery {shipment.deliveryText}</small></div>
+                                                <div><span class={shipment.statusCellClass}><i class={shipment.statusClass}></i>{shipment.status}</span></div>
+                                                <button type="button" class="details-button" data-page="load" data-load-id={shipment.loadId} onclick={navigate}>Details</button>
+                                            </article>
+                                        </template>
+                                    </div>
+                                    <template if:true={futurePagination.show}><div class="pagination"><span>{futurePagination.label}</span><div><button type="button" data-target="future" data-direction="-1" disabled={futurePagination.previousDisabled} onclick={handlePageChange}>Previous</button><strong>{futurePagination.page} / {futurePagination.totalPages}</strong><button type="button" data-target="future" data-direction="1" disabled={futurePagination.nextDisabled} onclick={handlePageChange}>Next</button></div></div></template>
+                                </section>
+                            </template>
+
+                            <section class="shipment-group">
+                                <div class="group-heading"><div><p class="section-kicker">Delivered Loads</p><h3>Completed freight history</h3></div><span>{deliveredShipmentCount}</span></div>
+                                <template if:true={hasDeliveredShipments}>
+                                    <div class="table-shell">
+                                        <div class="shipment-table-head shipment-columns"><span>Shipment / PO</span><span>Route and Dates</span><span>Status</span><span>Action</span></div>
+                                        <template for:each={pagedDeliveredShipments} for:item="shipment">
+                                            <article class="shipment-row shipment-columns" key={shipment.loadId}>
+                                                <div class="shipment-number"><span class="shipment-icon">▦</span><strong>{shipment.loadNumber}</strong></div>
+                                                <div><strong>{shipment.route}</strong><small>Pickup {shipment.pickupText} · Delivery {shipment.deliveryText}</small></div>
+                                                <div><span class={shipment.statusCellClass}><i class={shipment.statusClass}></i>{shipment.status}</span></div>
+                                                <button type="button" class="details-button" data-page="load" data-load-id={shipment.loadId} onclick={navigate}>Details</button>
+                                            </article>
+                                        </template>
+                                    </div>
+                                    <template if:true={deliveredPagination.show}><div class="pagination"><span>{deliveredPagination.label}</span><div><button type="button" data-target="delivered" data-direction="-1" disabled={deliveredPagination.previousDisabled} onclick={handlePageChange}>Previous</button><strong>{deliveredPagination.page} / {deliveredPagination.totalPages}</strong><button type="button" data-target="delivered" data-direction="1" disabled={deliveredPagination.nextDisabled} onclick={handlePageChange}>Next</button></div></div></template>
+                                </template>
+                                <template if:false={hasDeliveredShipments}><p class="empty-state">No delivered loads for this customer.</p></template>
+                            </section>
+                        </section>
+                    </template>
+
+                    <template if:true={isTrackingPage}>
+                        <section class="page-card">
+                            <div class="section-heading"><p class="section-kicker">Shipment Detail</p><h2>Live shipment tracking</h2><p>Review the latest route and driver location available for each active shipment.</p></div>
+                            <template if:true={hasTrackingShipments}>
+                                <template for:each={trackingShipments} for:item="shipment">
+                                    <article class="tracking-layout" key={shipment.loadId}>
+                                        <div class="tracking-info"><p class="section-kicker">{shipment.loadNumber}</p><h3>{shipment.route}</h3><p>{shipment.driverLocationText}</p><p>Last GPS update: {shipment.driverLastGpsUpdateText}</p><div class="progress-shell"><div class="progress-fill" style={shipment.progressStyle}></div></div><button type="button" class="details-button" data-page="load" data-load-id={shipment.loadId} onclick={navigate}>View Details</button></div>
+                                        <div class="tracking-map-shell">
+                                            <iframe
+                                                class="tracking-google-map"
+                                                src={shipment.googleMapsEmbedUrl}
+                                                title={shipment.loadNumber}
+                                                loading="eager"
+                                                allowfullscreen
+                                                referrerpolicy="no-referrer-when-downgrade">
+                                            </iframe>
+                                            <div class="tracking-route-meta"><div><span>Pickup</span><strong>{shipment.pickupLabel}</strong></div><div><span>Destination</span><strong>{shipment.deliveryLabel}</strong></div></div>
+                                        </div>
+                                    </article>
+                                </template>
+                            </template>
+                            <template if:false={hasTrackingShipments}><p class="empty-state">No live tracking is available.</p></template>
+                        </section>
+                    </template>
+
+                    <template if:true={isLoadPage}>
+                        <template if:true={hasSelectedLoad}>
+                            <template if:true={isDashboardLoadDetail}>
+                                <section class="page-card load-page load-detail-dark">
+                                    <div class="load-detail-toolbar">
+                                        <div class="load-detail-heading">
+                                            <div>
+                                                <p class="section-kicker">Load</p>
+                                                <h2>{selectedLoad.loadNumber}</h2>
+                                            </div>
+                                            <div class={selectedLoad.detailStatusClass} aria-label="Current shipment status">
+                                                <span class="status-label">Current Status</span>
+                                                <span class="status-value"><i class={selectedLoad.statusClass}></i>{selectedLoad.status}</span>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="outline-button" data-page="dashboard" onclick={navigate}>Back to Dashboard</button>
+                                    </div>
+
+                                    <div class="load-detail-actions">
+                                        <button type="button" class="detail-action-button" data-url={selectedLoad.invoiceUrl} onclick={openUrl}>Invoice</button>
+                                        <button type="button" class="detail-action-button" data-url={selectedLoad.bolUrl} onclick={openUrl}>Bill of Lading</button>
+                                        <button type="button" class="detail-action-button primary-detail-action" data-action="POD_UPLOAD" data-load-id={selectedLoad.loadId} data-load-number={selectedLoad.loadNumber} onclick={openAction}>Upload POD</button>
+                                    </div>
+
+                                    <section class="shipment-progress-card" aria-label="Shipment progress">
+                                        <div class="progress-line"></div>
+                                        <template for:each={selectedLoad.statusProgress} for:item="step">
+                                            <div class={step.className} key={step.value}>
+                                                <span>{step.marker}</span>
+                                                <small>{step.label}</small>
+                                            </div>
+                                        </template>
+                                    </section>
+
+                                    <div class="load-detail-grid">
+                                        <div class="load-detail-main">
+                                            <section class="dark-info-card">
+                                                <h3>Load Info</h3>
+                                                <div class="dark-field-grid">
+                                                    <div><span>Load ID</span><strong>{selectedLoad.loadNumber}</strong></div>
+                                                    <div><span>Status</span><strong>{selectedLoad.status}</strong></div>
+                                                    <div><span>Pickup</span><strong>{selectedLoad.pickupText}</strong></div>
+                                                    <div><span>Delivery</span><strong>{selectedLoad.deliveryText}</strong></div>
+                                                </div>
+                                            </section>
+
+                                            <section class="dark-info-card">
+                                                <h3>Customer Shipment</h3>
+                                                <div class="dark-field-grid">
+                                                    <div><span>Origin</span><strong>{selectedLoad.pickupLabel}</strong></div>
+                                                    <div><span>Destination</span><strong>{selectedLoad.deliveryLabel}</strong></div>
+                                                    <div><span>Weight</span><strong>{selectedLoad.weightText}</strong></div>
+                                                    <div><span>POD Status</span><strong>{selectedLoad.podLabel}</strong></div>
+                                                </div>
+                                            </section>
+
+                                            <section class="dark-info-card quote-card">
+                                                <div class="quote-card-header">
+                                                    <div>
+                                                        <h3>Quote</h3>
+                                                        <p>Review the quoted amount and confirmation status for this shipment.</p>
+                                                    </div>
+                                                    <span class={selectedLoad.quoteStatusClass}>{selectedLoad.quoteStatusLabel}</span>
+                                                </div>
+                                                <div class="quote-grid">
+                                                    <div><span>Quote Amount</span><strong>{selectedLoad.quoteAmountText}</strong></div>
+                                                    <div><span>Quote Stage</span><strong>{selectedLoad.quoteStageLabel}</strong></div>
+                                                    <template if:true={selectedLoad.quoteResponseAtText}>
+                                                        <div><span>Response Date</span><strong>{selectedLoad.quoteResponseAtText}</strong></div>
+                                                    </template>
+                                                </div>
+                                                <p class="quote-guidance">{selectedLoad.quoteNextActionLabel}</p>
+                                                <template if:true={selectedLoad.quoteResponseMessage}>
+                                                    <div class="quote-response-note"><span>Customer Note</span><p>{selectedLoad.quoteResponseMessage}</p></div>
+                                                </template>
+                                                <template if:true={selectedLoad.quoteActionAvailable}>
+                                                    <button type="button" class="primary-button quote-confirm-button" data-action="APPROVE_QUOTE" data-load-id={selectedLoad.loadId} data-load-number={selectedLoad.loadNumber} onclick={openAction}>Confirm Quote</button>
+                                                </template>
+                                            </section>
+                                        </div>
+
+                                        <aside class="load-detail-side">
+                                            <section class="dark-info-card quick-links-card">
+                                                <button type="button" data-page="tracking" onclick={navigate}><span>Tracking</span><strong>View</strong></button>
+                                                <button type="button" data-page="documents" onclick={navigate}><span>Documents</span><strong>View</strong></button>
+                                                <button type="button" data-page="invoices" onclick={navigate}><span>Invoices</span><strong>View</strong></button>
+                                            </section>
+
+                                            <section class="dark-info-card files-card">
+                                                <h3>Files</h3>
+                                                <button type="button" data-url={selectedLoad.invoiceUrl} onclick={openUrl}><span>Invoice</span><strong>PDF</strong></button>
+                                                <button type="button" data-url={selectedLoad.bolUrl} onclick={openUrl}><span>Bill of Lading</span><strong>PDF</strong></button>
+                                                <button type="button" data-action="POD_UPLOAD" data-load-id={selectedLoad.loadId} data-load-number={selectedLoad.loadNumber} onclick={openAction}><span>Proof of Delivery</span><strong>Upload</strong></button>
+                                            </section>
+
+                                            <section class="dark-info-card activity-card">
+                                                <h3>Update Status</h3>
+                                                <select value={selectedLoad.statusValue} data-load-id={selectedLoad.loadId} onchange={handleStatusSelection}>
+                                                    <template for:each={statusOptions} for:item="statusOption"><option key={statusOption.value} value={statusOption.value}>{statusOption.label}</option></template>
+                                                </select>
+                                                <button type="button" class="primary-button" data-load-id={selectedLoad.loadId} data-load-number={selectedLoad.loadNumber} disabled={selectedLoad.statusSaveDisabled} onclick={saveStatus}>Save Status</button>
+                                            </section>
+                                        </aside>
+                                    </div>
+
+                                    <template if:true={hasSelectedRouteMap}>
+                                        <section class="dark-info-card detail-map-card">
+                                            <div class="map-card-header"><h3>Tracking Map</h3><a href={selectedLoad.googleMapsUrl} target="_blank" rel="noopener noreferrer">View Route</a></div>
+                                            <iframe class="detail-map" src={selectedLoad.googleMapsEmbedUrl} title={selectedLoad.loadNumber} loading="eager" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                        </section>
+                                    </template>
+                                </section>
+                            </template>
+
+                                <template if:true={isCurrentShipmentDetail}>
+                                    <section class="page-card shipment-detail-page current-shipment-detail">
+                                        <div class="shipment-detail-intro">
+                                            <p class="section-kicker">Shipment Detail</p>
+                                            <h2>Extended shipment information</h2>
+                                            <p>Shipment details include route dates, shipment parties, freight information, and live tracking.</p>
+                                        </div>
+
+                                        <article class="shipment-detail-panel">
+                                            <!-- <nav class="shipment-detail-nav" aria-label="Shipment detail navigation">
+                                                <div class="shipment-detail-nav-links">
+                                                    <a href={dashboardUrl} data-page="dashboard" onclick={navigate}>Customer Portal</a>
+                                                    <a href={shipmentsUrl} data-page="shipments" data-filter="active" onclick={navigate}>Current Shipments</a>
+                                                    <a href={shipmentsUrl} data-page="shipments" data-filter="delivered" onclick={navigate}>History</a>
+                                                </div>
+                                                <button type="button" class="shipment-back-button" data-page="shipments" onclick={navigate}>Back</button>
+                                            </nav> -->
+
+                                            <header class="shipment-overview-strip">
+                                                <div class="shipment-identity">
+                                                    <span>Shipment #</span>
+                                                    <h3>{selectedLoad.loadNumber}</h3>
+                                                </div>
+                                                <div class="shipment-overview-meta">
+                                                    <div><span>Pickup Date</span><strong>{selectedLoad.pickupText}</strong></div>
+                                                    <div><span>Expected Delivery</span><strong>{selectedLoad.deliveryText}</strong></div>
+                                                </div>
+                                            </header>
+
+                                            <div class="shipment-detail-body">
+                                                <section class="shipment-parties-card">
+                                                    <h3>Shipment Parties</h3>
+                                                    <div class="shipment-parties-grid">
+                                                        <div class="shipment-party">
+                                                            <span>Pickup Location</span>
+                                                            <strong>{selectedLoad.pickupFacilityName}</strong>
+                                                            <p>{selectedLoad.pickupAddressLine}</p>
+                                                            <p>{selectedLoad.pickupCityStateZip}</p>
+                                                        </div>
+                                                        <div class="shipment-party">
+                                                            <span>Delivery Location</span>
+                                                            <strong>{selectedLoad.deliveryFacilityName}</strong>
+                                                            <p>{selectedLoad.deliveryAddressLine}</p>
+                                                            <p>{selectedLoad.deliveryCityStateZip}</p>
+                                                        </div>
+                                                    </div>
+                                                </section>
+
+                                                <div class="shipment-metrics-grid">
+                                                    <article><span>Load #</span><strong>{selectedLoad.loadNumber}</strong></article>
+                                                    <article><span>Quantity</span><strong>{selectedLoad.quantityText}</strong></article>
+                                                    <article><span>Weight</span><strong>{selectedLoad.weightText}</strong></article>
+                                                </div>
+
+                                                <section class="shipment-docs-card">
+                                                    <div class="shipment-docs-meta">
+                                                        <div class="shipment-docs-row"><span>Status</span><strong class={selectedLoad.shipmentStatusClass}><i class={selectedLoad.statusClass}></i>{selectedLoad.status}</strong></div>
+                                                        <div class="shipment-docs-row"><span>Pickup Date</span><strong>{selectedLoad.pickupText}</strong></div>
+                                                        <div class="shipment-docs-row"><span>Expected Delivery</span><strong>{selectedLoad.deliveryText}</strong></div>
+                                                    </div>
+                                                    <div class="shipment-docs-actions">
+                                                        <h3>View Docs</h3>
+                                                        <div class="shipment-docs-grid">
+                                                            <button type="button" class="shipment-doc-button" data-url={selectedLoad.invoiceUrl} onclick={openUrl}><span>▦</span><strong>Invoice</strong></button>
+                                                            <button type="button" class="shipment-doc-button" data-url={selectedLoad.bolUrl} onclick={openUrl}><span>▦</span><strong>BOL</strong></button>
+                                                            <button type="button" class="shipment-doc-button" data-action="POD_UPLOAD" data-load-id={selectedLoad.loadId} data-load-number={selectedLoad.loadNumber} onclick={openAction}><span>▦</span><strong>POD</strong></button>
+                                                        </div>
+                                                    </div>
+                                                </section>
+
+                                                <section class="shipment-route-card">
+                                                    <div class="shipment-route-header">
+                                                        <h3>Tracking Map</h3>
+                                                        <a href={selectedLoad.googleMapsUrl} target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+                                                    </div>
+                                                    <template if:true={hasSelectedRouteMap}>
+                                                        <div class="shipment-map-canvas" aria-label="Live shipment route map">
+                                                            <iframe
+                                                                class="shipment-google-map"
+                                                                src={selectedLoad.googleMapsEmbedUrl}
+                                                                title={selectedLoad.loadNumber}
+                                                                loading="eager"
+                                                                allowfullscreen
+                                                                referrerpolicy="no-referrer-when-downgrade">
+                                                            </iframe>
+                                                        </div>
+                                                        <div class="shipment-route-summary"><div><span>Pickup</span><strong>{selectedLoad.pickupLabel}</strong></div><div><span>Destination</span><strong>{selectedLoad.deliveryLabel}</strong></div></div>
+                                                    </template>
+                                                    <template if:false={hasSelectedRouteMap}>
+                                                        <div class="shipment-map-unavailable">The route map will appear when pickup and delivery addresses are available.</div>
+                                                    </template>
+                                                </section>
+                                            </div>
+                                        </article>
+                                    </section>
+                                </template>
+                        </template>
+                    </template>
+
+                    <template if:true={isDocumentsPage}>
+                        <section class="page-card"><div class="section-heading inline-heading"><div><p class="section-kicker">Documents</p><h2>POD Library</h2><p>Download documents connected to your shipments.</p></div><div class="search-box compact-search"><input type="search" placeholder="Search" value={searchDraft} oninput={handleSearchInput} onkeydown={handleSearchKeydown}/><button type="button" onclick={applySearch}>Search</button></div></div><template if:true={hasDocuments}><div class="document-grid"><template for:each={pagedDocuments} for:item="document"><article class="document-card" key={document.documentId}><p class="section-kicker">{document.type}</p><h3>{document.title}</h3><small>Load {document.loadNumber} · {document.dateText}</small><button type="button" class="outline-button" data-document-id={document.documentId} data-version-id={document.versionId} data-load-id={document.loadId} onclick={openDocument}>Download</button></article></template></div><template if:true={documentPagination.show}><div class="pagination"><span>{documentPagination.label}</span><div><button type="button" data-target="documents" data-direction="-1" disabled={documentPagination.previousDisabled} onclick={handlePageChange}>Previous</button><strong>{documentPagination.page} / {documentPagination.totalPages}</strong><button type="button" data-target="documents" data-direction="1" disabled={documentPagination.nextDisabled} onclick={handlePageChange}>Next</button></div></div></template></template><template if:false={hasDocuments}><p class="empty-state">No documents are available yet.</p></template></section>
+                    </template>
+
+                    <template if:true={isInvoicesPage}>
+                        <section class="page-card invoices-page">
+                            <div class="section-heading"><p class="section-kicker">Billing Visibility</p><h2>Shipment Billing</h2><p>View invoice status and billing details for all shipments.</p></div>
+                            <div class="invoice-toolbar"><strong>Billing Records</strong><div class="search-box compact-search"><input type="search" placeholder="Search shipment, status, origin, or destination" value={searchDraft} oninput={handleSearchInput} onkeydown={handleSearchKeydown}/><button type="button" onclick={applySearch}>Search</button></div></div>
+                            <template if:true={hasInvoices}>
+                                <div class="table-shell invoice-table">
+                                    <div class="shipment-table-head invoice-columns"><span>Shipment</span><span>Invoice Status</span><span>Load Amount</span><span>Origin</span><span>Destination</span><span>Action</span></div>
+                                    <template for:each={pagedInvoices} for:item="invoice"><article class="shipment-row invoice-columns" key={invoice.invoiceId}><strong>{invoice.loadNumber}</strong><span class={invoice.statusClassName}>{invoice.status}</span><span>{invoice.amountText}</span><span>{invoice.parentLoad.pickupLabel}</span><span>{invoice.parentLoad.deliveryLabel}</span><button type="button" class="details-button" data-url={invoice.actionUrl} onclick={openUrl}>View</button></article></template>
+                                </div>
+                                <template if:true={invoicePagination.show}><div class="pagination"><span>{invoicePagination.label}</span><div><button type="button" data-target="invoices" data-direction="-1" disabled={invoicePagination.previousDisabled} onclick={handlePageChange}>Previous</button><strong>{invoicePagination.page} / {invoicePagination.totalPages}</strong><button type="button" data-target="invoices" data-direction="1" disabled={invoicePagination.nextDisabled} onclick={handlePageChange}>Next</button></div></div></template>
+                            </template>
+                            <template if:false={hasInvoices}><p class="empty-state">No shipment billing records are available yet.</p></template>
+                        </section>
+                    </template>
+                </section>
+            </template>
+        </section>
+
+        <template if:true={showActionModal}>
+            <section class="modal-backdrop" role="dialog" aria-modal="true"><div class="modal-card"><p class="section-kicker">Load {activeLoadNumber}</p><h2>{actionTitle}</h2><p>{actionHelpText}</p><label>{actionMessageLabel}</label><textarea value={messageValue} onchange={handleMessageChange}></textarea><template if:true={isUploadPodAction}><label>POD file</label><input type="file" accept=".pdf,image/*" onchange={handleFileChange}/></template><template if:true={actionMessage}><p class="login-error">{actionMessage}</p></template><div class="modal-actions"><button type="button" class="outline-button" onclick={closeAction}>Cancel</button><button type="button" class="primary-button" disabled={submitDisabled} onclick={submitAction}>{actionSubmitLabel}</button></div></div></section>
+        </template>
+    </main>
+</template>

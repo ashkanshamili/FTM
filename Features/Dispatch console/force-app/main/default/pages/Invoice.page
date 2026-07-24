@@ -1,0 +1,161 @@
+<apex:page sidebar="false" renderAs="pdf" applyBodyTag="false" standardController="FreightTM__Load__c">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+        <style type="text/CSS">
+            .blackline { border: 1px solid #000;}
+            table { 
+                border-collapse: collapse;
+                border-spacing: 0;
+            }
+            td,th{
+                border: 1px solid #8f8f8f;
+                padding: 5px;
+            }
+        </style>
+    </head>
+
+    <apex:pageBlock > 
+        
+      <div style="font-family:arial, sans-serif; font-size: .85em">
+
+        <table width="100%" style="line-height:1.3em;">
+           <tr>
+            <td width="60%" align="left" style="border: none; vertical-align: bottom;">
+                <!--<apex:image url="https://c.na112.content.force.com/servlet/servlet.ImageServer?id=0153i000000MGaX&oid=00D3i000000qLLy&lastMod=1566244223000" width="210" style="margin-left:0px" /><br />-->
+                <!--<div style="color: black; text-align: left; margin-left:0px">-->
+                <apex:image url="{!$Resource.FreightTM__FTM_Logo}" width="100" height="55"/>
+                <!--<h2 style="margin: 0; padding-bottom: 10px;">{!$Organization.Name}</h2>--><br/> <br/>                 {!$Organization.Street}<br/> 
+                {!$Organization.City}, {!$Organization.State} {!$Organization.PostalCode}<br/> 
+                <!--MC #:<br />-->
+                Phone: {!$Organization.Phone}<br />
+                <!--Fax: {!$Organization.Fax}-->
+                <!--</div>-->
+            </td>
+            <td width="40%" align="right" style="text-align:left; border: none; vertical-align: bottom;">
+                <h2 style="text-indent:0%; margin-top:0; padding-top:0; color: #6a829e;">INVOICE</h2>
+                <!--<b>Invoice #:&nbsp;</b><apex:outputText value="{!FreightTM__Load__c.FreightTM__Invoice_Number__c}" /><br />-->
+                <b>Load #:&nbsp;</b><apex:outputText value="{!FreightTM__Load__c.Name}" /><br />
+                <!--<b>Confirmation #:&nbsp;</b><apex:outputText value="{!FreightTM__Load__c.FreightTM__Confirmation_Number__c}" /><br />-->
+                <b>Weight:&nbsp;</b><apex:outputText value="{0, number, 00.00}"><apex:param value="{!FreightTM__Load__c.FreightTM__Weight__c}"/></apex:outputText>&nbsp;lbs<br />
+                <!--<b>Total Distance:&nbsp;</b><apex:outputText value="{0, number, 00.00}"><apex:param value="{!FreightTM__Load__c.FreightTM__Total_Miles__c}"/></apex:outputText>&nbsp;mi<br />-->
+                <!--<b>Date:&nbsp;</b><apex:outputText value="{0, date, MMMM d',' yyyy}"><apex:param value="{!TODAY()}"/></apex:outputText><br />-->
+                <b>Date:&nbsp;</b><apex:outputText value="{0, date, MMMM d',' yyyy}"><apex:param value="{!FreightTM__Load__c.FreightTM__Invoiced_On__c}"/></apex:outputText><br />
+            </td>
+           </tr>
+        </table>
+        
+          <br /><br />
+        
+        <div style="line-height:1.5em">
+        <!--<apex:panelGrid columns="2">-->
+        
+        <table width="100%" style="line-height:1.3em;">
+          <tr>
+            <td width="100%" align="left" style="border-color:#c7cdd4;">
+                <b>Prepared For:</b><br />
+                <b style="text-transform: uppercase; line-height: 1.7em;"><apex:outputText value="{!FreightTM__Load__c.FreightTM__Customer__r.Name}" /></b><br />
+                <apex:outputText value="{!FreightTM__Load__c.FreightTM__Customer__r.BillingStreet}"/><br />
+                <apex:outputPanel ><apex:outputText value="{!FreightTM__Load__c.FreightTM__Customer__r.BillingCity}"/>, <apex:outputText value=" {!FreightTM__Load__c.FreightTM__Customer__r.BillingState}"/> <apex:outputText value=" {!FreightTM__Load__c.FreightTM__Customer__r.BillingPostalCode}"/></apex:outputPanel><br />
+                Phone:&nbsp;<apex:outputField value="{!FreightTM__Load__c.FreightTM__Customer__r.Phone}"/>
+            
+            </td>
+          </tr>
+        </table>
+        <!--</apex:panelGrid>-->  
+        </div>
+
+        <br />
+          
+     
+          
+        <table width="100%" style="line-height:1.3em;">
+        <!--<table width="100%" class="tableline" style="line-height:1.1em; border: 1px solid #000; border-collapse: collapse">-->  
+           <h3>Origin / Destination</h3>
+           <tr>
+               <th width="20%" align="center" style="width: 120px; background-color: #d5e0ed;">#</th>
+               <th width="30%" align="center" style="width: 200px; background-color: #d5e0ed;">Action</th>
+               <th width="50%" align="left" style="width: 500px; padding-left:10px; background-color: #d5e0ed;">Location</th>
+               <!--<th width="35%" align="left">Description</th>-->
+           </tr>
+           <tr>
+               <td align="center">1</td>
+               <td align="center">Pickup</td>
+               <td align="left" style="padding-left:10px;">
+               <apex:outputText value="{!FreightTM__Load__c.FreightTM__Pickup_Address__c}"/><br />
+               <apex:outputPanel ><apex:outputText value="{!FreightTM__Load__c.FreightTM__Pickup_City__c}"/>, <apex:outputText value=" {!FreightTM__Load__c.FreightTM__Pickup_State__c}"/> <apex:outputText value=" {!FreightTM__Load__c.FreightTM__Pickup_Zip_Code__c}"/></apex:outputPanel><br />
+               <apex:outputText value="{!FreightTM__Load__c.FreightTM__Pickup_Country__c}"/><br /></td>
+               <!--<td align="left" colspan="2"><apex:outputText value="{!FreightTM__Load__c.FreightTM__Description__c}"/></td>-->
+           </tr>
+          
+           <apex:variable value="{!2}" var="rowNum"/>
+
+           <tr>
+               <td align="center"><apex:outputText value="{!rowNum}"/></td>
+               <td align="center">Delivery</td>
+               <td align="left" style="padding-left:10px;">
+               <apex:outputText value="{!FreightTM__Load__c.FreightTM__Delivery_Address__c}"/><br />
+               <apex:outputPanel ><apex:outputText value="{!FreightTM__Load__c.FreightTM__Delivery_City__c}"/>, <apex:outputText value=" {!FreightTM__Load__c.FreightTM__Delivery_State__c}"/> <apex:outputText value=" {!FreightTM__Load__c.FreightTM__Delivery_Zip_Code__c}"/></apex:outputPanel><br />
+               <apex:outputText value="{!FreightTM__Load__c.FreightTM__Delivery_Country__c}"/><br /></td>
+           </tr>
+           <!--
+           <tr>              
+               <td colspan="5" cellspacing="40"><apex:outputText value="Description: {!FreightTM__Load__c.FreightTM__Description__c}"/></td>
+           </tr>
+           -->
+        </table>
+          
+        <br />
+        
+        <table width="100%" style="line-height:1.3em">
+           <h3>Pay Items</h3>
+          
+           <tr>
+               <th width="20%" align="left" style="width: 600px; background-color: #d5e0ed;">Type</th>
+               <th width="30%" align="left" style="width: 300px; background-color: #d5e0ed;">Description</th>
+               <th width="15%" align="left" style="width: 300px; background-color: #d5e0ed;">Unit Price</th>
+               <th width="15%" align="left" style="width: 300px; background-color: #d5e0ed;">No. of Units</th>
+               <th width="20%" align="left" style="width: 300px; background-color: #d5e0ed;">Amount</th>
+           </tr>
+           <apex:repeat var="e" value="{!FreightTM__Load__c.FreightTM__Line_Items__r}">
+           <tr>
+               <td align="left"><apex:outputText value="{!e.FreightTM__Type__c}"/></td>
+               <td align="left"><apex:outputText value="{!e.FreightTM__Description__c}"/></td>
+               <td align="left"><apex:outputText value="{!e.FreightTM__Unit_Price__c}"/></td>
+               <td align="left"><apex:outputText value="{!e.FreightTM__Number_of_Units__c}"/></td>
+               <td align="left">$<apex:outputText value="{0, number,00.00}"><apex:param value="{!e.FreightTM__Amount__c}"/></apex:outputText></td>
+           </tr>
+           </apex:repeat>
+           
+           <tr>
+              <td style="border:none;"></td>
+              <td style="border:none;"></td>
+              <td style="border:none;"></td>
+              <td style="border:none;"></td>
+              <td style="border:none;"></td>
+           </tr>
+           
+           <tr>
+              <td colspan="2" style="border:none;"></td>
+              <td colspan="2">Total Line Items:</td>
+              <td>$<apex:outputText value="{0, number,00.00}"><apex:param value="{!FreightTM__Load__c.FreightTM__Total_Line_Items__c}"/></apex:outputText><br /></td>
+           </tr>
+           <tr>
+              <td colspan="2" style="border:none;"></td>
+              <td colspan="2">Base Rate:</td>
+              <td>$<apex:outputText value="{0, number,00.00}"><apex:param value="{!FreightTM__Load__c.FreightTM__Rate__c}"/></apex:outputText><br /></td>
+           </tr>
+           <tr>
+              <td colspan="2" style="border:none;"></td>
+              <td colspan="2"><b>Total Amount:</b></td>
+              <td><b>$<apex:outputText value="{0, number,00.00}"><apex:param value="{!FreightTM__Load__c.FreightTM__Total__c}"/></apex:outputText></b></td>
+           </tr>
+              
+
+          </table>
+
+          <br /><br /><br />
+
+      </div>
+        
+    </apex:pageBlock>
+</apex:page>

@@ -1,0 +1,53 @@
+<template>
+    <div class="console-page">
+        <section class="console-card">
+            <header class="console-header">
+                <div class="title-block">
+                    <p class="eyebrow">Dispatch Console</p>
+                    <h1>{pageTitle}</h1>
+                    <p class="page-subtitle">{pageSubtitle}</p>
+                </div>
+
+                <nav class="tabs">
+                    <button class={loadBoardTabClass} data-tab="loadBoard" onclick={handleTabClick}>
+                        Load Board
+                    </button>
+
+                    <button class={assignmentTabClass} data-tab="assignment" onclick={handleTabClick}>
+                        Assignment
+                    </button>
+
+                    <button class={documentsTabClass} data-tab="documents" onclick={handleTabClick}>
+                        Documents
+                    </button>
+
+                    <button class={marginTabClass} data-tab="margin" onclick={handleTabClick}>
+                        Margin
+                    </button>
+                </nav>
+            </header>
+
+            <template if:true={isLoadBoardTab}>
+                <c-dispatch-load-board
+                    state-code={stateCode}
+                    onstatechange={handleStateChange}>
+                </c-dispatch-load-board>
+            </template>
+
+            <template if:true={isAssignmentTab}>
+                <c-dispatch-assignment
+                    state-code={stateCode}
+                    onstatechange={handleStateChange}>
+                </c-dispatch-assignment>
+            </template>
+
+            <template if:true={isDocumentsTab}>
+                <c-dispatch-documents state-code={stateCode}></c-dispatch-documents>
+            </template>
+
+            <template if:true={isMarginTab}>
+                <c-dispatch-margin state-code={stateCode}></c-dispatch-margin>
+            </template>
+        </section>
+    </div>
+</template>

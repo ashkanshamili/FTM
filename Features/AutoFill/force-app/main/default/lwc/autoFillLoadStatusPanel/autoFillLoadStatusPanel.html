@@ -1,0 +1,138 @@
+<template>
+    <lightning-card>
+        <div class="panel">
+            <header class="panel-hero">
+                <div class="panel-title">
+                    <span class="panel-icon" aria-hidden="true">
+                        <lightning-icon icon-name="utility:email" size="small" alternative-text=""></lightning-icon>
+                    </span>
+                    <div>
+                        <p class="hero-eyebrow">AutoFill review</p>
+                        <h2>Document status</h2>
+                        <p>Review extracted data and complete the Load workflow.</p>
+                    </div>
+                </div>
+                <template if:true={hasRecord}>
+                    <span class={statusClass}>{statusLabel}</span>
+                </template>
+            </header>
+
+            <div class="panel-body">
+                <template if:true={isLoading}>
+                    <div class="loading-state" role="status">
+                        <lightning-spinner alternative-text="Loading AutoFill status" size="small"></lightning-spinner>
+                        <span>Loading AutoFill status...</span>
+                    </div>
+                </template>
+
+                <template if:true={loadError}>
+                    <div class="error-state" role="alert">{loadError}</div>
+                </template>
+
+                <template if:true={hasRecord}>
+                    <div class="status-header">
+                        <div>
+                            <p class="eyebrow">Current review state</p>
+                            <h3>{statusLabel}</h3>
+                        </div>
+                    </div>
+
+                    <div class="summary-grid slds-m-top_medium">
+                        <div class="summary-item">
+                            <span>Created by AutoFill</span>
+                            <strong>{createdByAutoFillLabel}</strong>
+                        </div>
+                        <div class="summary-item source-summary">
+                            <span>Source</span>
+                            <strong class="source-summary-value">
+                                <lightning-icon
+                                    icon-name={sourceIcon}
+                                    size="xx-small"
+                                    alternative-text="">
+                                </lightning-icon>
+                                {sourceLabel}
+                            </strong>
+                        </div>
+                        <template if:true={itemId}>
+                            <div class="summary-item">
+                                <span>Item ID</span>
+                                <strong>{itemId}</strong>
+                            </div>
+                        </template>
+                        <template if:true={documentType}>
+                            <div class="summary-item">
+                                <span>Document Type</span>
+                                <strong>{documentType}</strong>
+                            </div>
+                        </template>
+                        <template if:true={formattedConfidence}>
+                            <div class="summary-item">
+                                <span>Confidence</span>
+                                <strong>{formattedConfidence}</strong>
+                            </div>
+                        </template>
+                        <template if:true={approvedAt}>
+                            <div class="summary-item">
+                                <span>Approved At</span>
+                                <strong>{approvedAt}</strong>
+                            </div>
+                        </template>
+                    </div>
+
+                    <template if:true={showActions}>
+                        <div class="button-row slds-m-top_medium">
+                            <lightning-button
+                                label="Approve Load"
+                                variant="brand"
+                                icon-name="utility:success"
+                                disabled={actionDisabled}
+                                onclick={approveLoad}>
+                            </lightning-button>
+                            <lightning-button
+                                label="Reject and Delete"
+                                variant="destructive"
+                                icon-name="utility:delete"
+                                disabled={actionDisabled}
+                                onclick={rejectLoad}>
+                            </lightning-button>
+                        </div>
+                    </template>
+
+                    <template if:true={isApproved}>
+                        <p class="locked-note slds-m-top_medium">
+                            <lightning-icon icon-name="utility:lock" size="xx-small" alternative-text="Approved"></lightning-icon>
+                            This AutoFill Load is approved and locked from returning to Direct.
+                        </p>
+                    </template>
+
+                    <template if:true={hasExtractRows}>
+                        <div class="extract-wrap slds-m-top_medium">
+                            <div class="extract-title">
+                                <p class="eyebrow">Extracted data</p>
+                                <h3>Clean field view</h3>
+                            </div>
+                            <div class="table-wrap">
+                                <table class="extract-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Field</th>
+                                            <th scope="col">Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={extractRows} for:item="row">
+                                            <tr key={row.id}>
+                                                <td><span class="field-name">{row.label}</span></td>
+                                                <td><span class="field-value">{row.displayValue}</span></td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </div>
+    </lightning-card>
+</template>

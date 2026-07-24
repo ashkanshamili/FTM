@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata"><labels>
+        <fullName>Driver_Portal_Base_URL</fullName>
+        <categories>Driver Portal</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Public Driver Portal URL used to generate Load links</shortDescription>
+        <value>https://wise-koala-63tngo-dev-ed.trailblaze.my.salesforce-sites.com/DriverPortal</value>
+    </labels>
+    </CustomLabels>

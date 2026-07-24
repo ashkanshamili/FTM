@@ -1,0 +1,321 @@
+<template>
+    <div class="page">
+
+        <div class="hero">
+    <div class="hero-logo-wrap">
+        <img
+            src={hollowayLogoUrl}
+            alt="Holloway Logo"
+            class="hero-logo"
+        />
+    </div>
+
+    <div class="hero-text">
+        <h1>Carrier Onboarding</h1>
+        <p>Complete your carrier setup, sign the agreement, and upload required compliance documents.</p>
+    </div>
+</div>
+
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading"></lightning-spinner>
+        </template>
+
+        
+
+        <template if:true={showStep1}>
+            <section class="card">
+                <h2>Step 1 — Carrier Information</h2>
+
+                <div class="grid">
+                    <lightning-input label="Carrier Name" required value={form.carrierName} data-field="carrierName" onchange={handleInput}></lightning-input>
+                    <lightning-input label="MC/MX/FF Number" value={form.mcNumber} data-field="mcNumber" onchange={handleInput}></lightning-input>
+                    <lightning-input label="USDOT Number" value={form.usdotNumber} data-field="usdotNumber" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Federal ID #" value={form.federalId} data-field="federalId" onchange={handleInput}></lightning-input>
+                    <lightning-input label="SCAC Code" value={form.scacCode} data-field="scacCode" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Website" type="url" value={form.website} data-field="website" onchange={handleInput}></lightning-input>
+                </div>
+
+                <h3>Primary Contact</h3>
+
+                <div class="grid">
+                    <lightning-input label="Primary Contact" required value={form.primaryContact} data-field="primaryContact" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Title" value={form.title} data-field="title" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Email" type="email" required value={form.email} data-field="email" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Phone" type="tel" required value={form.phone} data-field="phone" onchange={handleInput}></lightning-input>
+                    <lightning-input label="After Hours Phone" type="tel" value={form.afterHoursPhone} data-field="afterHoursPhone" onchange={handleInput}></lightning-input>
+                </div>
+
+                <h3>Physical Address</h3>
+
+                <div class="grid">
+                    <lightning-input label="Street" value={form.street} data-field="street" onchange={handleInput}></lightning-input>
+                    <lightning-input label="City" value={form.city} data-field="city" onchange={handleInput}></lightning-input>
+
+                    <lightning-combobox
+                        label="Country"
+                        value={form.country}
+                        data-field="country"
+                        options={countryOptions}
+                        onchange={handleInput}>
+                    </lightning-combobox>
+
+                    <lightning-combobox
+    label="State/Province"
+    value={form.stateProvince}
+    data-field="stateProvince"
+    options={physicalStateOptions}
+    disabled={disablePhysicalState}
+    onchange={handleInput}>
+</lightning-combobox>
+
+                    <lightning-input label="Zip Code" value={form.zipCode} data-field="zipCode" onchange={handleInput}></lightning-input>
+                </div>
+
+                <h3>Billing Address</h3>
+
+                <div class="grid">
+                    <lightning-input label="Billing Street" value={form.billingStreet} data-field="billingStreet" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Billing City" value={form.billingCity} data-field="billingCity" onchange={handleInput}></lightning-input>
+
+                    <lightning-combobox
+                        label="Billing Country"
+                        value={form.billingCountry}
+                        data-field="billingCountry"
+                        options={countryOptions}
+                        onchange={handleInput}>
+                    </lightning-combobox>
+
+                    <lightning-combobox
+    label="Billing State/Province"
+    value={form.billingStateProvince}
+    data-field="billingStateProvince"
+    options={billingStateOptions}
+    disabled={disableBillingState}
+    onchange={handleInput}>
+</lightning-combobox>
+
+                    <lightning-input label="Billing Zip Code" value={form.billingZipCode} data-field="billingZipCode" onchange={handleInput}></lightning-input>
+                </div>
+
+                <h3>Operations</h3>
+
+                <div class="grid">
+                    <lightning-dual-listbox
+                        name="mode"
+                        label="Mode"
+                        source-label="Available"
+                        selected-label="Chosen"
+                        options={modeOptions}
+                        value={selectedModes}
+                        onchange={handleModeChange}>
+                    </lightning-dual-listbox>
+
+                    <lightning-input label="Preferred Lanes" required value={form.preferredLanes} data-field="preferredLanes" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Number of Drivers" required type="number" value={form.numberOfDrivers} data-field="numberOfDrivers" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Number of Tractors" required type="number" value={form.numberOfTractors} data-field="numberOfTractors" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Number of Trailers" required type="number" value={form.numberOfTrailers} data-field="numberOfTrailers" onchange={handleInput}></lightning-input>
+                </div>
+
+                <div class="checks">
+                    <lightning-input type="checkbox" label="LTL" checked={form.ltl} data-field="ltl" onchange={handleCheckbox}></lightning-input>
+                    <lightning-input type="checkbox" label="Hazmat Permit" checked={form.hazmatPermit} data-field="hazmatPermit" onchange={handleCheckbox}></lightning-input>
+                    <lightning-input type="checkbox" label="Online GPS Tracking" checked={form.onlineGpsTracking} data-field="onlineGpsTracking" onchange={handleCheckbox}></lightning-input>
+                </div>
+
+                <h3>Insurance</h3>
+
+                <div class="grid">
+                    <lightning-input label="Cargo Insurance Amount" required type="number" value={form.cargoInsuranceAmount} data-field="cargoInsuranceAmount" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Cargo Insurance Expiration" required type="date" value={form.cargoInsuranceExpiration} data-field="cargoInsuranceExpiration" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Liability Insurance Amount" required type="number" value={form.liabilityInsuranceAmount} data-field="liabilityInsuranceAmount" onchange={handleInput}></lightning-input>
+                    <lightning-input label="Liability Insurance Expiration" required type="date" value={form.liabilityInsuranceExpiration} data-field="liabilityInsuranceExpiration" onchange={handleInput}></lightning-input>
+                </div>
+
+                <lightning-textarea label="Remarks" value={form.remarks} data-field="remarks" onchange={handleInput}></lightning-textarea>
+
+                <h3>Agreement</h3>
+                <div class="agreement">
+    <p>
+        By checking the box below, the signer confirms that the carrier agrees to the broker-carrier onboarding terms and authorizes submission for compliance review.
+    </p>
+
+    <div class="agreement-actions">
+    <button
+        type="button"
+        class="review-agreement-button"
+        onclick={openAgreementModal}>
+        Review/Download Agreement
+    </button>
+</div>
+
+    <lightning-input
+        type="checkbox"
+        label="I accept the broker-carrier agreement"
+        checked={form.agreementAccepted}
+        data-field="agreementAccepted"
+        onchange={handleCheckbox}>
+    </lightning-input>
+
+    <lightning-input
+        label="Signed By"
+        value={form.agreementSignedBy}
+        data-field="agreementSignedBy"
+        onchange={handleInput}>
+    </lightning-input>
+</div>
+
+                <!--<div class="agreement">
+                    <p>
+                        By checking the box below, the signer confirms that the carrier agrees to the broker-carrier onboarding terms and authorizes submission for compliance review.
+                    </p>
+
+                    <lightning-input type="checkbox" label="I accept the broker-carrier agreement" checked={form.agreementAccepted} data-field="agreementAccepted" onchange={handleCheckbox}></lightning-input>
+
+                    <lightning-input label="Signed By" value={form.agreementSignedBy} data-field="agreementSignedBy" onchange={handleInput}></lightning-input>
+                </div>-->
+                <template if:true={message}>
+            <div class={messageClass}>
+                {message}
+            </div>
+        </template>
+
+                <div class="actions">
+                    <lightning-button variant="brand" label="Save and Continue" onclick={saveAndContinue}></lightning-button>
+                </div>
+            </section>
+        </template>
+
+        <template if:true={showStep2}>
+            <section class="card">
+                <h2>Step 2 — Upload Required Documents</h2>
+                <p>Please upload the required documents. Accepted formats: PDF, PNG, JPG, JPEG, DOC, DOCX.</p>
+
+                <div class="document-box">
+                    <h3>W-9</h3>
+                    <input type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" data-type="W-9" onchange={handleFileSelected} />
+                    <lightning-button label="Upload W-9" data-type="W-9" onclick={uploadSelectedFile}></lightning-button>
+
+                    <template if:true={uploadedDocuments.w9}>
+                        <p class="upload-success">W-9 uploaded successfully.</p>
+                    </template>
+                </div>
+
+                <div class="document-box">
+                    <h3>MC Authority</h3>
+                    <input type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" data-type="MC Authority" onchange={handleFileSelected} />
+                    <lightning-button label="Upload MC Authority" data-type="MC Authority" onclick={uploadSelectedFile}></lightning-button>
+
+                    <template if:true={uploadedDocuments.mcAuthority}>
+                        <p class="upload-success">MC Authority uploaded successfully.</p>
+                    </template>
+                </div>
+
+                <div class="document-box">
+                    <h3>Certificate of Insurance</h3>
+                    <lightning-input type="date" label="Insurance Expiration Date" value={insuranceDocExpiration} onchange={handleInsuranceDocExpiration}></lightning-input>
+                    <input type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" data-type="Certificate of Insurance" onchange={handleFileSelected} />
+                    <lightning-button label="Upload Certificate of Insurance" data-type="Certificate of Insurance" onclick={uploadSelectedFile}></lightning-button>
+
+                    <template if:true={uploadedDocuments.insurance}>
+                        <p class="upload-success">Certificate of Insurance uploaded successfully.</p>
+                    </template>
+                </div>
+
+                <div class="document-box">
+                    <h3>Broker Carrier Agreement</h3>
+                    <input type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" data-type="Broker Carrier Agreement" onchange={handleFileSelected} />
+                    <lightning-button label="Upload Agreement" data-type="Broker Carrier Agreement" onclick={uploadSelectedFile}></lightning-button>
+
+                    <template if:true={uploadedDocuments.agreement}>
+                        <p class="upload-success">Agreement uploaded successfully.</p>
+                    </template>
+                </div>
+                <div class="document-box">
+    <h3>Signature</h3>
+    <p>Please draw your signature below. This will be saved as a file on the Carrier record.</p>
+
+    <div class="signature-pad">
+        <canvas
+            class="signature-canvas"
+            width="700"
+            height="180"
+            onmousedown={startSignature}
+            onmousemove={drawSignature}
+            onmouseup={endSignature}
+            onmouseleave={endSignature}
+            ontouchstart={startSignature}
+            ontouchmove={drawSignature}
+            ontouchend={endSignature}>
+        </canvas>
+    </div>
+
+    <div class="signature-actions">
+        <lightning-button label="Clear Signature" onclick={clearSignature}></lightning-button>
+        <lightning-button variant="brand" label="Save Signature" onclick={saveSignature}></lightning-button>
+    </div>
+
+    <template if:true={uploadedDocuments.signature}>
+        <p class="upload-success">Signature saved successfully.</p>
+    </template>
+</div>
+
+<template if:true={message}>
+            <div class={messageClass}>
+                {message}
+            </div>
+        </template>
+                <div class="actions">
+                    <lightning-button label="Back" onclick={goToStep1}></lightning-button>
+                    <lightning-button variant="brand" label="Submit for Review" onclick={submitReview}></lightning-button>
+                </div>
+            </section>
+            
+        </template>
+
+        <template if:true={showStep3}>
+            <section class="card success-card">
+                <h2>Submitted</h2>
+                <p>Your onboarding has been submitted for compliance review.</p>
+                <p>A broker or compliance team member will review your documents and update your carrier status.</p>
+            </section>
+        </template>
+
+        <template if:true={showAgreementModal}>
+            <section class="modal-backdrop">
+                <div class="agreement-modal">
+                    <div class="agreement-modal-header">
+                        <h2>Broker-Carrier Agreement</h2>
+                    </div>
+
+                    <div class="agreement-modal-body">
+                        <p>
+                            Please review the Holloway Logistics Master Broker-Carrier Agreement before accepting the onboarding terms.
+                        </p>
+
+                        <p>
+                            This agreement establishes the terms and conditions under which the carrier provides transportation services for Holloway Logistics.
+                        </p>
+
+                        <p>
+                            To view the full legal document, click the download button below.
+                        </p>
+
+                        <a
+                            class="download-agreement-button modal-download"
+                            href={agreementDownloadUrl}
+                            download="Holloway_Logistics_Master_Carrier_Agreement.docx">
+                            Download Full Agreement
+                        </a>
+                    </div>
+
+                    <div class="agreement-modal-footer">
+                        <lightning-button
+                            label="Close"
+                            onclick={closeAgreementModal}>
+                        </lightning-button>
+                    </div>
+                </div>
+            </section>
+        </template>
+    </div>
+</template>

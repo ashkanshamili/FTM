@@ -1,0 +1,363 @@
+<template>
+    <div class="portal">
+        <header class="brand-header">
+            <div class="brand-identity">
+                <div class="brand-logo-shell">
+                    <img
+                        class="brand-logo"
+                        src={ftmLogoUrl}
+                        alt="FTM logo" />
+                </div>
+
+                <div class="brand-copy">
+                    <p class="brand-kicker">FTM Driver Portal</p>
+                    <div class="brand-title">{brandTitle}</div>
+                </div>
+            </div>
+
+            <div class="header-live" aria-label="Portal is live">
+                <span class="header-live-dot"></span>
+                <span>Live</span>
+            </div>
+        </header>
+
+        <template if:true={loading}>
+            <div class="loading-shell"></div>
+        </template>
+
+        <template if:true={error}>
+            <div class="error">
+                {error}
+            </div>
+        </template>
+
+        <template if:true={data}>
+            <template if:true={data.portalClosed}>
+                <section class="mobile-shell">
+                    <header class="app-header">
+                        <div class="eyebrow">Completed Load</div>
+                        <h1>{data.loadName}</h1>
+                        <p>{displayRoute}</p>
+                        <div class="status-pill">{data.status}</div>
+                    </header>
+
+                    <section class="card center">
+                        <h3>Delivery Completed</h3>
+                        <p>{data.portalClosedMessage}</p>
+                        <p class="small">No more portal actions are available for this load.</p>
+                    </section>
+                </section>
+            </template>
+
+            <template if:false={data.portalClosed}>
+                <section class="mobile-shell">
+                    <template if:true={isLoadDetailsTab}>
+                        <header class="app-header">
+                            <div class="header-row">
+                                <div>
+                                    <div class="eyebrow">Active Load</div>
+                                    <h1>{data.loadName}</h1>
+                                    <p>{displayRoute}</p>
+                                </div>
+
+                                
+                            </div>
+
+                            <div class="status-pill">{data.status}</div>
+                        </header>
+
+                        <section class="card">
+                            <h3>Activity</h3>
+
+                            <div class="activity-row">
+                                <span class={pickupArrivalDotClass}></span>
+                                <div>Arrived at pickup</div>
+                                <strong>{pickupArrivalText}</strong>
+                            </div>
+
+                            <div class="activity-row">
+                                <span class={pickupDepartureDotClass}></span>
+                                <div>Departed pickup</div>
+                                <strong>{pickupDepartureText}</strong>
+                            </div>
+
+                            <div class="activity-row">
+                                <span class={deliveryArrivalDotClass}></span>
+                                <div>Arrived at delivery</div>
+                                <strong>{deliveryArrivalText}</strong>
+                            </div>
+
+                            <div class="activity-row">
+                                <span class={deliveryDepartureDotClass}></span>
+                                <div>Delivery Completed</div>
+                                <strong>{deliveryDepartureText}</strong>
+                            </div>
+                        <!--</section>
+
+                        <section class="card">
+                            <h3>Load Details</h3>-->
+
+                            <p><strong>Commodity:</strong> {displayCommodity}</p>
+                            <p><strong>Weight:</strong> {displayWeight}</p>
+                            <p><strong>Distance:</strong> {displayDistance}</p>
+                            <p><strong>Requirements:</strong> {displayRequirements}</p>
+                            <p><strong>Remarks:</strong> {displayRemarks}</p>
+                            <!--<p><strong>Exception Reason:</strong> {displayExceptionReason}</p>
+                            <p><strong>Driver Remarks:</strong> {displayDriverRemarks}</p>-->
+                        </section>
+
+                        <!--<template if:true={hasLegs}>
+                            <section class="card">
+                                <h3>Related Legs</h3>
+
+                                <template for:each={data.legs} for:item="leg">
+                                    <div key={leg.legId} class="leg-row">
+                                        <strong>{leg.legName}</strong>
+                                        <span>{leg.status}</span>
+                                    </div>
+                                </template>
+                            </section>
+                        </template>-->
+
+                        <section class="footer-actions">
+                            <button class="primary" onclick={goToUpdateStatus}>
+                                Update Status
+                            </button>
+
+                            <button class="secondary" onclick={goToReportIssue}>
+                                Report Issue
+                            </button>
+
+                            <button class="secondary" onclick={goToUploadPod}>
+                                Upload POD
+                            </button>
+
+                            <button class="secondary" onclick={goToSignature}>
+                                Capture Signature 
+                            </button>
+                        </section>
+                    </template>
+
+                    <template if:true={isPickupTab}>
+                        <header class="app-header">
+                            <button class="back-button" type="button" onclick={goToLoadDetails}>← Back</button>
+                            <div class="eyebrow">Pickup</div>
+                            <h1>{data.loadName}</h1>
+                            <p>{displayPickupAddress}</p>
+                            <div class="status-pill">{data.status}</div>
+                        </header>
+
+                        <section class="card">
+                            <h3>Pickup Details</h3>
+
+                            <p><strong>Facility:</strong> {displayPickupFacility}</p>
+                            <p><strong>Address:</strong> {displayPickupAddress}</p>
+                            <p><strong>Contact:</strong> {displayPickupContact}</p>
+                            <p><strong>Phone:</strong> {displayPickupPhone}</p>
+                            <p><strong>Email:</strong> {displayPickupEmail}</p>
+                            <p><strong>Ref #:</strong> {displayPickupRef}</p>
+                            <p><strong>Remarks:</strong> {displayPickupRemarks}</p>
+
+                            <button
+                                class="primary"
+                                data-action="ARRIVED_PICKUP"
+                                onclick={handleStatusClick}
+                                disabled={arrivedPickupDisabled}>
+                                Arrived for Pickup
+                            </button>
+
+                            <button
+                                class="secondary"
+                                data-action="DEPARTED_PICKUP"
+                                onclick={handleStatusClick}
+                                disabled={departedPickupDisabled}>
+                                Departed Pickup
+                            </button>
+
+                            <p class="small">{actionMessage}</p>
+                        </section>
+                    </template>
+
+                    <template if:true={isDeliveryTab}>
+                        <header class="app-header">
+                            <button class="back-button" type="button" onclick={goToLoadDetails}>← Back</button>
+                            <div class="eyebrow">Delivery</div>
+                            <h1>{data.loadName}</h1>
+                            <p>{displayDeliveryAddress}</p>
+                            <div class="status-pill">{data.status}</div>
+                        </header>
+
+                        <section class="card">
+                            <h3>Delivery Details</h3>
+
+                            <p><strong>Facility:</strong> {displayDeliveryFacility}</p>
+                            <p><strong>Address:</strong> {displayDeliveryAddress}</p>
+                            <p><strong>Contact:</strong> {displayDeliveryContact}</p>
+                            <p><strong>Phone:</strong> {displayDeliveryPhone}</p>
+                            <p><strong>Email:</strong> {displayDeliveryEmail}</p>
+                            <p><strong>Ref #:</strong> {displayDeliveryRef}</p>
+                            <p><strong>Remarks:</strong> {displayDeliveryRemarks}</p>
+
+                            <button
+                                class="primary"
+                                data-action="ARRIVED_DELIVERY"
+                                onclick={handleStatusClick}
+                                disabled={arrivedDeliveryDisabled}>
+                                Arrived for Delivery
+                            </button>
+
+                            <button
+                                class="secondary"
+                                data-action="DELIVERED"
+                                onclick={handleStatusClick}
+                                disabled={deliveredDisabled}>
+                                Delivery Completed
+                            </button>
+
+                            <p class="small">{actionMessage}</p>
+                        </section>
+                    </template>
+
+                    <template if:true={isReportIssueTab}>
+                        <header class="app-header">
+                            <button class="back-button" type="button" onclick={goToLoadDetails}>← Back</button>
+                            <div class="eyebrow">Report Issue</div>
+                            <h1>{data.loadName}</h1>
+                            <p>{displayRoute}</p>
+                            <div class="status-pill">{data.status}</div>
+                        </header>
+
+                        <section class="card">
+                            <h3>Report Issue</h3>
+
+                            <label for="issueType">Exception Reason</label>
+                            <select id="issueType" onchange={handleIssueTypeChange}>
+                                <option value="">Select exception reason</option>
+                                <option value="Late Pickup">Late Pickup</option>
+                                <option value="Late Delivery">Late Delivery</option>
+                                <option value="Missing POD">Missing POD</option>
+                                <option value="Missing Bill">Missing Bill</option>
+                                <option value="Rate Variance">Rate Variance</option>
+                                <option value="Carrier Issue">Carrier Issue</option>
+                                <option value="Driver Issue">Driver Issue</option>
+                                <option value="Truck Issue">Truck Issue</option>
+                                <option value="Customer Hold">Customer Hold</option>
+                                <option value="Claim">Claim</option>
+                                <option value="Other">Other</option>
+                            </select>
+
+                            <label for="issueNotes">Driver Remarks</label>
+                            <textarea
+                                id="issueNotes"
+                                class="issue-notes"
+                                value={issueNotes}
+                                oninput={handleIssueNotesChange}
+                                maxlength="255"
+                                placeholder="Enter driver remarks">
+                            </textarea>
+                            <p class="small">{issueCharacterCount}/255 characters</p>
+
+                            <button
+                                class="primary"
+                                onclick={submitIssue}
+                                disabled={issueSubmitting}>
+                                Report Issue
+                            </button>
+
+                            <p class="small">{issueMessage}</p>
+                        </section>
+                        <section class="card">
+    <h3>Upload File</h3>
+
+    <input
+        type="file"
+        onchange={handleFileChange} />
+
+    <button
+        class="primary"
+        onclick={submitFile}
+        disabled={fileUploadDisabled}>
+        Upload File
+    </button>
+
+    <p class="small">{fileMessage}</p>
+</section>
+
+                    </template>
+
+                    <template if:true={isUploadPodTab}>
+                        <header class="app-header">
+                            <button class="back-button" type="button" onclick={goToLoadDetails}>← Back</button>
+                            <div class="eyebrow">Upload POD</div>
+                            <h1>{data.loadName}</h1>
+                            <p>{displayRoute}</p>
+                            <div class="status-pill">{data.status}</div>
+                        </header>
+
+                        <section class="card">
+                            <h3>Upload POD / File</h3>
+                            <input type="file" onchange={handleFileChange} />
+                            <button
+                                class="primary"
+                                onclick={submitFile}
+                                disabled={fileUploadDisabled}>
+                                Upload POD / File
+                            </button>
+                            <p class="small">{fileMessage}</p>
+                        </section>
+                    </template>
+
+                    <template if:true={isSignatureTab}>
+                        <header class="app-header">
+                            <button class="back-button" type="button" onclick={goToLoadDetails}>← Back</button>
+                            <div class="eyebrow">{signaturePageTitle}</div>
+                            <h1>{data.loadName}</h1>
+                            <p>{displayRoute}</p>
+                            <div class="status-pill">{data.status}</div>
+                        </header>
+
+                        <section class="card">
+                            <h3>Capture Signature</h3>
+
+                            <label for="signerName">Signer Name</label>
+                            <input
+                                id="signerName"
+                                type="text"
+                                value={signerName}
+                                onchange={handleSignerNameChange}
+                                placeholder="Enter signer name" />
+
+<p><strong>Signature Type:</strong> {signatureSignerType}</p>
+
+                            <canvas
+                                class="signature-canvas"
+                                onmousedown={startDrawing}
+                                onmousemove={draw}
+                                onmouseup={stopDrawing}
+                                onmouseleave={stopDrawing}
+                                ontouchstart={startDrawing}
+                                ontouchmove={draw}
+                                ontouchend={stopDrawing}>
+                            </canvas>
+
+                            <div class="button-row">
+                                <button class="secondary" onclick={clearSignature}>
+                                    Clear
+                                </button>
+
+                                <button
+                                    class="primary"
+                                    onclick={submitSignature}
+                                    disabled={signatureSaving}>
+                                    Save Signature
+                                </button>
+                            </div>
+
+                            <p class="small">{signatureMessage}</p>
+                        </section>
+                    </template>
+                </section>
+            </template>
+        </template>
+    </div>
+</template>

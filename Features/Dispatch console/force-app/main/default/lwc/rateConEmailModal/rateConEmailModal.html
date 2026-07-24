@@ -1,0 +1,59 @@
+<template>
+    <lightning-modal-header label={modalTitle}></lightning-modal-header>
+
+    <lightning-modal-body>
+        <div class="email-form">
+            <lightning-input
+                type="email"
+                label="Carrier Email"
+                value={toEmail}
+                onchange={handleEmailChange}
+                disabled={isSending}>
+            </lightning-input>
+
+            <lightning-input
+                type="text"
+                label="Subject"
+                value={subject}
+                onchange={handleSubjectChange}
+                disabled={isSending}>
+            </lightning-input>
+
+            <lightning-textarea
+                label="Body"
+                value={body}
+                onchange={handleBodyChange}
+                disabled={isSending}>
+            </lightning-textarea>
+        </div>
+
+        <div class="attachment-label">
+            Attachment: RateCon PDF
+        </div>
+
+        <div class="preview-frame-wrap">
+            <iframe
+                src={previewUrl}
+                title="Rate Confirmation PDF Preview"
+                class="preview-frame">
+            </iframe>
+        </div>
+    </lightning-modal-body>
+
+    <lightning-modal-footer>
+        <lightning-button
+            label="Cancel"
+            variant="neutral"
+            onclick={handleCancel}
+            disabled={isSending}>
+        </lightning-button>
+
+        <lightning-button
+            label={sendButtonLabel}
+            variant="brand"
+            onclick={handleSend}
+            disabled={sendDisabled}
+            class="slds-m-left_small">
+        </lightning-button>
+    </lightning-modal-footer>
+</template>

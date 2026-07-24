@@ -1,0 +1,764 @@
+<template>
+    <div class="load-board-shell">
+        <header class="board-header">
+            <div class="brand-section">
+                <div class="brand-logo">
+                  <img
+                    src={ftmLogoUrl}
+                    alt="FTM Logo"
+                    class="brand-logo-image"
+                  />
+                </div>
+
+                <div class="brand-copy">
+                    <h1>
+                        PRIVATE LOADBOARD · YOUR NETWORK
+                    </h1>
+
+                    <template if:true={isAuthenticated}>
+                        <p class="carrier-session-name">
+                            {carrierName}
+                        </p>
+                    </template>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div class="live-indicator">
+                    <span class="live-dot"></span>
+                    <span>LIVE</span>
+                </div>
+
+                <template if:true={isAuthenticated}>
+                    <button
+                        class="logout-button"
+                        type="button"
+                        onclick={handleLogout}>
+                        Log Out
+                    </button>
+                </template>
+            </div>
+        </header>
+
+        <template if:true={isLoading}>
+            <div class="loading-overlay">
+                <lightning-spinner
+                    alternative-text="Loading"
+                    size="medium"
+                    variant="brand">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isAuthenticated}>
+            <main class="login-page">
+                <section class="login-card">
+                    <p class="section-eyebrow">
+                        FREIGHT MANAGEMENT
+                    </p>
+
+                    <h2>Carrier Load Board</h2>
+
+                    <p class="login-description">
+                        Enter your registered carrier information
+                        to view the private load board.
+                    </p>
+
+                    <template if:true={errorMessage}>
+                        <div
+                            class="message message-error"
+                            role="alert">
+                            {errorMessage}
+                        </div>
+                    </template>
+
+                    <form onsubmit={handleLogin}>
+                        <div class="form-group">
+                            <label for="carrier-name">
+                                <span class="required-marker">
+                                    *
+                                </span>
+                                Carrier Name
+                            </label>
+
+                            <input
+                                id="carrier-name"
+                                class="dark-input"
+                                type="text"
+                                name="carrierName"
+                                value={loginCarrierName}
+                                onchange={handleLoginFieldChange}
+                                autocomplete="organization"
+                                maxlength="80"
+                                required
+                            />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="mc-number">
+                                <span class="required-marker">
+                                    *
+                                </span>
+                                MC Number
+                            </label>
+
+                            <input
+                                id="mc-number"
+                                class="dark-input"
+                                type="text"
+                                name="mcNumber"
+                                value={loginMcNumber}
+                                onchange={handleLoginFieldChange}
+                                autocomplete="off"
+                                maxlength="10"
+                                required
+                            />
+                        </div>
+
+                        <div class="login-button-container">
+                            <button
+                                class="primary-button login-button"
+                                type="submit"
+                                disabled={disableLoginButton}>
+                                Open Load Board
+                            </button>
+                        </div>
+                    </form>
+                </section>
+            </main>
+        </template>
+
+        <template if:true={isAuthenticated}>
+    <main class="board-content">
+        <section class="statistics-grid">
+            <button
+                class="statistic-card statistic-button"
+                type="button"
+                onclick={handleShowOpenOpportunities}>
+
+                <p>OPEN OPPORTUNITIES</p>
+
+                <strong>
+                    {openOpportunityCount}
+                </strong>
+            </button>
+
+            <button
+    class="statistic-card statistic-button"
+    type="button"
+    onclick={handleShowAssignedLoads}
+    disabled={isLoading}>
+
+    <p>APPROVED CARRIER</p>
+
+    <strong class="carrier-stat">
+        {carrierName}
+    </strong>
+
+    <span class="statistic-link">
+        View assigned loads
+    </span>
+</button>
+
+            <button
+                class="statistic-card statistic-button"
+                type="button"
+                onclick={handleShowMyBids}
+                disabled={isLoading}>
+
+                <p>SUBMITTED BIDS</p>
+
+                <strong>
+                    {submittedBidCount}
+                </strong>
+
+                <span class="statistic-link">
+                    View my bids
+                </span>
+            </button>
+        </section>
+
+        <template if:true={successMessage}>
+            <div
+                class="message message-success"
+                role="status">
+                {successMessage}
+            </div>
+        </template>
+
+        <template if:true={errorMessage}>
+            <div
+                class="message message-error"
+                role="alert">
+                {errorMessage}
+            </div>
+        </template>
+
+        <!-- OPEN OPPORTUNITIES SCREEN -->
+        <template if:true={showOpenOpportunities}>
+            <section class="filter-panel">
+    <div class="search-wrapper">
+        <span
+    class="search-icon"
+    aria-hidden="true">
+
+    <svg
+        class="search-icon-svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg">
+
+        <circle
+            cx="11"
+            cy="11"
+            r="6.5">
+        </circle>
+
+        <path
+            d="M16 16L21 21">
+        </path>
+    </svg>
+</span>
+
+        <input
+            class="search-input"
+            type="search"
+            value={searchTerm}
+            oninput={handleSearch}
+            placeholder="Search load, pickup city, state, ZIP, or trailer type"
+            aria-label="Search loads"
+        />
+    </div>
+
+    <div class="filter-actions">
+        <button
+            class="primary-button apply-filter-button"
+            type="button"
+            onclick={handleApplyFilter}
+            disabled={isLoading}>
+            Apply Filter
+        </button>
+
+        <button
+            class="secondary-button clear-filter-button"
+            type="button"
+            onclick={handleClearFilter}
+            disabled={isLoading}>
+            Clear Filter
+        </button>
+
+        <button
+            class="secondary-button refresh-button"
+            type="button"
+            onclick={handleRefresh}
+            disabled={isLoading}>
+            Refresh
+        </button>
+    </div>
+</section>
+
+            <section class="load-list-section">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-eyebrow">
+                            CURRENT SHIPMENTS
+                        </p>
+
+                        <h2>Available Loads</h2>
+                    </div>
+
+                    <span class="result-count">
+                        {filteredLoadCountLabel}
+                    </span>
+                </div>
+
+                <template if:true={hasFilteredLoads}>
+                    <div class="load-table-shell">
+                        <table class="load-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">
+                                        Load / Lane
+                                    </th>
+
+                                    <th scope="col">
+                                        Status
+                                    </th>
+
+                                    <th scope="col">
+                                        Trailer
+                                    </th>
+
+                                    <th scope="col">
+                                        Pickup
+                                    </th>
+
+                                    <th scope="col">
+                                        Weight
+                                    </th>
+
+                                    <th scope="col">
+                                        Transit Time (day(s))
+                                    </th>
+
+                                    <th scope="col">
+                                        Transition Date
+                                    </th>
+
+                                    <th scope="col">
+                                        Rate
+                                    </th>
+
+                                    <th
+                                        scope="col"
+                                        class="action-heading">
+                                        Action
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <template
+                                    for:each={paginatedLoads}
+                                    for:item="load">
+
+                                    <tr key={load.loadId}>
+                                        <td class="load-primary-cell">
+                                            <strong class="table-load-name">
+                                                {load.loadName}
+                                            </strong>
+
+                                            <span class="table-load-lane">
+                                                {load.lane}
+                                            </span>
+
+                                            <template if:true={load.bidError}>
+                                                <div
+                                                    class="inline-bid-message inline-bid-error"
+                                                    role="alert">
+                                                    {load.bidError}
+                                                </div>
+                                            </template>
+                                            <template if:true={load.bidSuccess}>
+                                                <div
+                                                     class="inline-bid-message inline-bid-success"
+                                                     role="status">
+                                                     {load.bidSuccess}
+                                                </div>
+                                            </template>
+                                        </td>
+
+                                        <td>
+                                            <span class="status-badge">
+                                                {load.status}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            {load.trailerDisplay}
+                                        </td>
+
+                                        <td>
+                                            {load.pickupDateDisplay}
+                                        </td>
+
+                                        <td>
+                                            {load.weightDisplay}
+                                        </td>
+
+                                        <td class="table-input-cell">
+                                            <input
+                                                class="inline-bid-input"
+                                                type="number"
+                                                name="bidTransitTime"
+                                                data-load-id={load.loadId}
+                                                value={load.bidTransitTime}
+                                                onchange={handleLoadBidFieldChange}
+                                                min="1"
+                                                step="1"
+                                                inputmode="numeric"
+                                                placeholder="Enter number"
+                                                aria-label="Transit Time"
+                                            />
+                                        </td>
+
+                                        <td class="table-input-cell transition-cell">
+                                            <input
+                                                class="inline-bid-input"
+                                                type="datetime-local"
+                                                name="bidTransitionDate"
+                                                data-load-id={load.loadId}
+                                                value={load.bidTransitionDate}
+                                                onchange={handleLoadBidFieldChange}
+                                                aria-label="Transition Date"
+                                            />
+                                        </td>
+
+                                        <td class="table-input-cell">
+                                            <div class="inline-currency-wrapper">
+                                                <span class="inline-currency-symbol">
+                                                    $
+                                                </span>
+
+                                                <input
+                                                    class="inline-bid-input inline-rate-input"
+                                                    type="number"
+                                                    name="bidRate"
+                                                    data-load-id={load.loadId}
+                                                    value={load.bidRate}
+                                                    onchange={handleLoadBidFieldChange}
+                                                    min="0.01"
+                                                    step="0.01"
+                                                    placeholder="0.00"
+                                                    aria-label="Rate"
+                                                />
+                                            </div>
+                                        </td>
+
+                                        <td class="table-action-cell">
+                                            <button
+                                                class="primary-button submit-rate-button"
+                                                type="button"
+                                                data-load-id={load.loadId}
+                                                onclick={handleSubmitBid}
+                                                disabled={load.isSubmittingBid}>
+
+                                                <template if:true={load.isSubmittingBid}>
+                                                    Submitting...
+                                                </template>
+
+                                                <template if:false={load.isSubmittingBid}>
+                                                    Submit Rate
+                                                </template>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <template if:true={showPagination}>
+                        <nav
+                            class="pagination"
+                            aria-label="Load board pagination">
+
+                            <span class="pagination-summary">
+                                {paginationSummary}
+                            </span>
+
+                            <div class="pagination-actions">
+                                <button
+                                    class="pagination-button"
+                                    type="button"
+                                    onclick={handlePreviousPage}
+                                    disabled={disablePreviousPage}>
+                                    Previous
+                                </button>
+
+                                <span class="page-indicator">
+                                    {pageIndicator}
+                                </span>
+
+                                <button
+                                    class="pagination-button"
+                                    type="button"
+                                    onclick={handleNextPage}
+                                    disabled={disableNextPage}>
+                                    Next
+                                </button>
+                            </div>
+                        </nav>
+                    </template>
+                </template>
+
+                <template if:false={hasFilteredLoads}>
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            FTM
+                        </div>
+
+                        <h3>No matching loads</h3>
+
+                        <p>
+                            Change your search or refresh
+                            the load board.
+                        </p>
+                    </div>
+                </template>
+            </section>
+        </template>
+
+        <!-- MY BIDS SCREEN -->
+        <template if:true={showMyBids}>
+            <section class="load-list-section my-bids-section">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-eyebrow">
+                            CARRIER ACTIVITY
+                        </p>
+
+                        <h2>My Bids</h2>
+                    </div>
+
+                    <div class="section-heading-actions">
+                        <span class="result-count">
+                            {myBidCountLabel}
+                        </span>
+
+                        <button
+                            class="secondary-button"
+                            type="button"
+                            onclick={handleShowOpenOpportunities}>
+                            Open Opportunities
+                        </button>
+
+                        <button
+                            class="secondary-button"
+                            type="button"
+                            onclick={handleRefresh}
+                            disabled={isLoading}>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <template if:true={hasMyBids}>
+                    <div class="load-table-shell">
+                        <table class="load-table my-bids-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">
+                                        Bid Name
+                                    </th>
+
+                                    <th scope="col">
+                                        Load
+                                    </th>
+
+                                    <th scope="col">
+                                        Rate
+                                    </th>
+
+                                    <th scope="col">
+                                        Transit Time
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <template
+                                    for:each={myBids}
+                                    for:item="bid">
+
+                                    <tr key={bid.bidId}>
+                                        <td>
+                                            <strong class="table-load-name">
+                                                {bid.bidName}
+                                            </strong>
+
+                                            <span class="table-load-lane">
+                                                Submitted {bid.submittedDateDisplay}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <strong class="table-load-name">
+                                                {bid.loadName}
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            <strong class="bid-rate-value">
+                                                {bid.rateDisplay}
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            {bid.transitTimeDisplay}
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+
+                <template if:false={hasMyBids}>
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            FTM
+                        </div>
+
+                        <h3>No submitted bids</h3>
+
+                        <p>
+                            Bids will appear here after they
+                            have been processed.
+                        </p>
+
+                        <button
+                            class="secondary-button empty-state-button"
+                            type="button"
+                            onclick={handleShowOpenOpportunities}>
+                            Open Opportunities
+                        </button>
+                    </div>
+                </template>
+            </section>
+        </template>
+        <!-- ASSIGNED LOADS SCREEN -->
+<template if:true={showAssignedLoads}>
+    <section class="load-list-section assigned-loads-section">
+        <div class="section-heading">
+            <div>
+                <p class="section-eyebrow">
+                    ACTIVE SHIPMENTS
+                </p>
+
+                <h2>Assigned Loads</h2>
+            </div>
+
+            <div class="section-heading-actions">
+                <span class="result-count">
+                    {assignedLoadCountLabel}
+                </span>
+
+                <button
+                    class="secondary-button"
+                    type="button"
+                    onclick={handleShowOpenOpportunities}>
+                    Open Opportunities
+                </button>
+
+                <button
+                    class="secondary-button"
+                    type="button"
+                    onclick={handleShowMyBids}
+                    disabled={isLoading}>
+                    My Bids
+                </button>
+
+                <button
+                    class="secondary-button"
+                    type="button"
+                    onclick={handleRefresh}
+                    disabled={isLoading}>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <template if:true={hasAssignedLoads}>
+            <div class="load-table-shell">
+                <table class="load-table assigned-loads-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                Load
+                            </th>
+
+                            <th scope="col">
+                                Status
+                            </th>
+
+                            <th scope="col">
+                                Trailer
+                            </th>
+
+                            <th scope="col">
+                                Pickup
+                            </th>
+
+                            <th scope="col">
+                                Pickup Date
+                            </th>
+
+                            <th scope="col">
+                                Weight
+                            </th>
+
+                            <th scope="col">
+                                Rate
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <template
+                            for:each={assignedLoads}
+                            for:item="load">
+
+                            <tr key={load.loadId}>
+                                <td>
+                                    <strong class="table-load-name">
+                                        {load.loadName}
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    <span class="status-badge">
+                                        {load.statusDisplay}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {load.trailerDisplay}
+                                </td>
+
+                                <td>
+                                    {load.pickupAddressDisplay}
+                                </td>
+
+                                <td>
+                                    {load.pickupDateDisplay}
+                                </td>
+
+                                <td>
+                                    {load.weightDisplay}
+                                </td>
+
+                                <td>
+                                    <strong class="bid-rate-value">
+                                        {load.rateDisplay}
+                                    </strong>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <template if:false={hasAssignedLoads}>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <img
+                        src={ftmLogoUrl}
+                        alt="FTM Logo"
+                        class="empty-logo-image"
+                    />
+                </div>
+
+                <h3>No assigned loads</h3>
+
+                <p>
+                    No active loads are currently assigned
+                    to this carrier.
+                </p>
+
+                <button
+                    class="secondary-button empty-state-button"
+                    type="button"
+                    onclick={handleShowOpenOpportunities}>
+                    Open Opportunities
+                </button>
+            </div>
+        </template>
+    </section>
+</template>
+
+    </main>
+</template>
+    </div>
+</template>

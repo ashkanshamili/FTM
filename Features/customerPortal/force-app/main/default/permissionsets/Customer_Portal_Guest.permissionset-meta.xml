@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <classAccesses>
+        <apexClass>CustomerPortalController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CustomerPortalCredentialEmailService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CustomerPortalCredentialService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CustomerPortalDriverLocationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CustomerPortalEventHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CustomerPortalTokenService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <description>Runtime access for the public Customer Portal Salesforce Site guest user.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Customer Portal Guest</label>
+    <pageAccesses>
+        <apexPage>CustomerPortal</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses><pageAccesses>
+        <apexPage>CustomerPortalSiteTemplate</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
+        <apexPage>CustomerPortalSiteError</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
+        <apexPage>CustomerPortalSiteMaintenance</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+</PermissionSet>

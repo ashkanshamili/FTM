@@ -1,0 +1,251 @@
+<template>
+    <section class="assignment-wrap">
+        <template if:true={isResourceLoading}>
+            <lightning-spinner alternative-text="Loading resource page" size="small"></lightning-spinner>
+        </template>
+        <template if:true={isLoadLoading}>
+            <lightning-spinner alternative-text="Loading load page" size="small"></lightning-spinner>
+        </template>
+        <template if:true={errorMessage}>
+            <div class="empty-box">{errorMessage}</div>
+        </template>
+        <div class="assignment-toolbar">
+            <div class="select-wrap">
+                <lightning-combobox
+                    name="state"
+                    label="Operating State / Province"
+                    value={localStateCode}
+                    placeholder="Select a State"
+                    options={stateOptions}
+                    onchange={handleStateChange}>
+                </lightning-combobox>
+            </div>
+
+            <button class="blue-btn" onclick={handleStateSearch}>Load State</button>
+
+            <div class="assignment-context">
+                <template if:true={selectedRecordName}>
+                    <span>Selected {selectedType}</span>
+                    <strong>{selectedRecordName}</strong>
+                </template>
+
+                <template if:false={selectedRecordName}>
+                    <span>No assignment target selected</span>
+                    <strong>Select truck, driver, or carrier</strong>
+                </template>
+            </div>
+        </div>
+
+        <section class="assignment-hero-grid">
+            <aside class="resource-panel">
+                <div class="resource-panel-header">
+                    <div>
+                        <p class="eyebrow">Assignment Center</p>
+                        <h2>Resources</h2>
+                    </div>
+
+                    <span class={assignmentStateClass}>{assignmentStateLabel}</span>
+                </div>
+
+                <div class="compact-stats">
+                    <article>
+                        <strong>{truckCount}</strong>
+                        <span>Trucks</span>
+                    </article>
+
+                    <article>
+                        <strong>{driverCount}</strong>
+                        <span>Drivers</span>
+                    </article>
+
+                    <article>
+                        <strong>{carrierCount}</strong>
+                        <span>Carriers</span>
+                    </article>
+
+                    <article>
+                        <strong>{loadCount}</strong>
+                        <span>Loads</span>
+                    </article>
+                </div>
+
+                <div class="resource-tabs">
+                    <button class={truckTabClass} data-type="Truck" onclick={handleResourceTab}>
+                        Trucks
+                    </button>
+
+                    <button class={driverTabClass} data-type="Driver" onclick={handleResourceTab}>
+                        Drivers
+                    </button>
+
+                    <button class={carrierTabClass} data-type="Carrier" onclick={handleResourceTab}>
+                        Carriers
+                    </button>
+                </div>
+
+                <div class="resource-table enterprise-table">
+                    <template if:true={isTruckTab}>
+                        <lightning-datatable
+                            key-field="Id"
+                            data={paginatedTruckRows}
+                            columns={truckColumns}
+                            max-row-selection="1"
+                            selected-rows={selectedResourceRows}
+                            onrowselection={handleResourceRowSelection}>
+                        </lightning-datatable>
+                    </template>
+
+                    <template if:true={isDriverTab}>
+                        <lightning-datatable
+                            key-field="Id"
+                            data={paginatedDriverRows}
+                            columns={driverColumns}
+                            max-row-selection="1"
+                            selected-rows={selectedResourceRows}
+                            onrowselection={handleResourceRowSelection}>
+                        </lightning-datatable>
+                    </template>
+
+                    <template if:true={isCarrierTab}>
+                        <lightning-datatable
+                            key-field="Id"
+                            data={paginatedCarrierRows}
+                            columns={carrierColumns}
+                            max-row-selection="1"
+                            selected-rows={selectedResourceRows}
+                            onrowselection={handleResourceRowSelection}>
+                        </lightning-datatable>
+                    </template>
+
+                    <template if:false={hasResources}>
+                        <div class="empty-box">No {selectedType} records found for this state.</div>
+                    </template>
+
+                    <template if:true={hasResources}>
+                        <div class="pagination-bar compact-pagination">
+                            <span>{resourceRangeLabel}</span>
+
+                            <div class="pagination-controls">
+                                <button onclick={handleResourceFirstPage} disabled={resourcePreviousDisabled} title="First page">«</button>
+                                <button onclick={handleResourcePreviousPage} disabled={resourcePreviousDisabled}>Previous</button>
+                                <strong>Page {resourcePageNumber} of {resourceTotalPages}</strong>
+                                <button onclick={handleResourceNextPage} disabled={resourceNextDisabled}>Next</button>
+                                <button onclick={handleResourceLastPage} disabled={resourceNextDisabled} title="Last page">»</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="assignment-cta">
+                    <div>
+                        <span>Assignment Action</span>
+                        <strong>{assignButtonLabel}</strong>
+                        <small>{previewText}</small>
+                    </div>
+
+                    <button class="rose-btn" onclick={handleAssign} disabled={assignDisabled}>
+                        Assign Selected Loads
+                    </button>
+
+                    <button class="ghost-btn full-btn" onclick={handlePreviewAssignment}>
+                        Preview Assignment
+                    </button>
+                </div>
+            </aside>
+
+            <main class="map-hero">
+                <c-dispatch-map
+                    selected-record={selectedResourceRecord}
+                    selected-type={selectedType}
+                    selected-loads={selectedLoadRows}
+                    matched-states={matchedStates}>
+                </c-dispatch-map>
+            </main>
+        </section>
+
+        <section class="load-board-section">
+            <div class="load-board-header">
+                <div>
+                    <p class="eyebrow">Matching Loads</p>
+                    <h2>Loads for Assignment</h2>
+                    <span>{loadTotalRecords} loads found · {selectedLoadCount} selected</span>
+                </div>
+
+                <div class="load-board-actions">
+                    <button class="outline-btn" onclick={handleSelectAllLoads}>Select All</button>
+                    <button class="outline-btn" onclick={handleDeselectLoads}>Deselect</button>
+                    <button class="pink-btn" onclick={handleClearLoadFilters}>Clear Filters</button>
+                </div>
+            </div>
+
+            <div class="load-tools">
+                <div class="load-filter search-filter">
+                    <label>Search Load</label>
+                    <input
+                        type="search"
+                        value={loadSearchKey}
+                        oninput={handleLoadSearch}
+                        placeholder="Search by load name, city, state, carrier, driver, or 3-digit ZIP..." />
+                </div>
+
+                <div class="load-filter status-filter">
+                    <lightning-combobox
+                        name="status"
+                        label="Status"
+                        value={loadStatusFilter}
+                        options={loadStatusOptions}
+                        onchange={handleLoadStatusChange}>
+                    </lightning-combobox>
+                </div>
+
+                <div class="saved-views">
+                    <button class={allLoadsViewClass} data-view="all" onclick={handleLoadViewChange}>
+                        All
+                    </button>
+
+                    <button class={unassignedViewClass} data-view="unassigned" onclick={handleLoadViewChange}>
+                        Unassigned
+                    </button>
+
+                    <button class={exceptionsViewClass} data-view="exceptions" onclick={handleLoadViewChange}>
+                        Exceptions
+                    </button>
+
+                    <button class={readyViewClass} data-view="ready" onclick={handleLoadViewChange}>
+                        Ready
+                    </button>
+                </div>
+            </div>
+
+            <div class="load-table enterprise-table">
+                <template if:true={hasLoads}>
+                    <lightning-datatable
+                        key-field="Id"
+                        data={paginatedLoadRows}
+                        columns={loadColumns}
+                        selected-rows={selectedLoadIds}
+                        onrowselection={handleLoadRowSelection}>
+                    </lightning-datatable>
+                </template>
+
+                <template if:false={hasLoads}>
+                    <div class="empty-box">No loads found for the selected filters.</div>
+                </template>
+
+                <template if:true={hasLoads}>
+                    <div class="pagination-bar">
+                        <span>{loadRangeLabel}</span>
+
+                        <div class="pagination-controls">
+                            <button onclick={handleLoadFirstPage} disabled={loadPreviousDisabled} title="First page">«</button>
+                            <button onclick={handleLoadPreviousPage} disabled={loadPreviousDisabled}>Previous</button>
+                            <strong>Page {loadPageNumber} of {loadTotalPages}</strong>
+                            <button onclick={handleLoadNextPage} disabled={loadNextDisabled}>Next</button>
+                            <button onclick={handleLoadLastPage} disabled={loadNextDisabled} title="Last page">»</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+    </section>
+</template>

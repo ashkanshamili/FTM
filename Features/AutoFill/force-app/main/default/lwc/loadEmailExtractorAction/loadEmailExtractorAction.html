@@ -1,0 +1,944 @@
+<template>
+    <lightning-card>
+        <div class="autofill-shell">
+            <header class="workspace-hero">
+                <div class="workspace-brand">
+                    <span class="workspace-icon" aria-hidden="true">
+                        <lightning-icon icon-name="utility:email" size="small" alternative-text=""></lightning-icon>
+                    </span>
+                    <div>
+                        <p class="hero-eyebrow">Freight document automation</p>
+                        <h1>AutoFill Workspace</h1>
+                        <p class="hero-copy">Create clean Salesforce records from freight documents, email text, or both.</p>
+                    </div>
+                </div>
+                <div class="workspace-badge">
+                    <span class="badge-dot" aria-hidden="true"></span>
+                    Salesforce-native
+                </div>
+            </header>
+
+            <div class="workspace-body">
+                <lightning-tabset class="workspace-tabs" active-tab-value="upload">
+
+                    <!-- SECTION 1: UPLOAD -->
+                    <lightning-tab label="Upload Document" value="upload">
+                        <section class="upload-panel slds-m-top_medium">
+                            <div class="section-heading">
+                                <div>
+                                    <p class="eyebrow">Document intake</p>
+                                    <h2>Start a new extraction</h2>
+                                    <p class="section-copy">
+                                        Add email or document notes, at least one attachment, or both.
+                                    </p>
+                                </div>
+                                <template if:true={isSending}>
+                                    <div class="processing-state" role="status">
+                                        <lightning-spinner alternative-text="Processing document" size="small"></lightning-spinner>
+                                        <span>Processing</span>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="upload-grid">
+                                <div class="input-surface">
+                                    <div class="surface-heading">
+                                        <lightning-icon icon-name="utility:email" size="x-small" alternative-text="Email notes"></lightning-icon>
+                                        <span>Email or document context</span>
+                                    </div>
+                                    <lightning-textarea
+                                        label="Email / document notes"
+                                        value={emailContent}
+                                        disabled={isSending}
+                                        onchange={handleDescriptionChange}
+                                        placeholder="Paste the email body or add useful context for this document">
+                                    </lightning-textarea>
+                                </div>
+
+                                <div class="file-dropzone">
+                                    <div class="dropzone-heading">
+                                        <span class="dropzone-icon" aria-hidden="true">
+                                            <lightning-icon icon-name="utility:upload" size="small" alternative-text=""></lightning-icon>
+                                        </span>
+                                        <div>
+                                            <strong>Add source files</strong>
+                                            <p>Upload one or more freight documents for extraction.</p>
+                                        </div>
+                                    </div>
+
+                                    <lightning-input
+                                        class="file-input"
+                                        type="file"
+                                        label="Attachments"
+                                        multiple
+                                        disabled={isSending}
+                                        onchange={handleFilesChange}>
+                                    </lightning-input>
+
+                                    <template if:true={hasSelectedFiles}>
+                                        <div class="selected-files">
+                                            <p class="selected-files-label">Ready to process</p>
+                                            <div class="file-pill-list">
+                                                <template for:each={selectedFileNames} for:item="fileName">
+                                                    <span class="file-pill" key={fileName}>
+                                                        <lightning-icon icon-name="utility:check" size="xx-small" alternative-text="Selected"></lightning-icon>
+                                                        {fileName}
+                                                    </span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="footer-actions slds-m-top_large">
+                                <lightning-button
+                                    label="Clear"
+                                    onclick={clearForm}
+                                    disabled={disableSendButton}>
+                                </lightning-button>
+
+                                <lightning-button
+                                    label={sendButtonLabel}
+                                    variant="brand"
+                                    icon-name="utility:upload"
+                                    onclick={sendToApi}
+                                    disabled={disableSendButton}>
+                                </lightning-button>
+                            </div>
+                        </section>
+
+            <template if:true={errorMessage}>
+                <div class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium" role="alert">
+                    <span>{errorMessage}</span>
+                </div>
+            </template>
+
+            <template if:true={successMessage}>
+                <section class="result-card success slds-m-top_medium">
+                    <div class="section-heading compact">
+                        <div>
+                            <p class="eyebrow">Created record</p>
+                            <h2>Salesforce record created</h2>
+                        </div>
+                        <template if:true={autoFillStatus}>
+                            <span class={autoFillStatusClass}>{autoFillStatus}</span>
+                        </template>
+                    </div>
+
+                    <p class="muted slds-m-top_x-small">{successMessage}</p>
+
+                    <template if:true={hasCreatedRecord}>
+                        <div class="summary-grid slds-m-top_medium">
+                            <div class="summary-item">
+                                <span>Object</span>
+                                <strong>{createdObjectTypeLabel}</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>Record ID</span>
+                                <strong>{createdRecordId}</strong>
+                            </div>
+                            <template if:true={itemId}>
+                                <div class="summary-item">
+                                    <span>Item ID</span>
+                                    <strong>{itemId}</strong>
+                                </div>
+                            </template>
+                            <div class="summary-item">
+                                <span>Source</span>
+                                <strong>{autoFillSource}</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>Document Type</span>
+                                <strong>{detectedDocumentType}</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>Field Count</span>
+                                <strong>{autoFillFieldCount}</strong>
+                            </div>
+                        </div>
+
+                        <div class="button-row slds-m-top_medium">
+                            <template if:true={hasViewableCreatedRecord}>
+                                <lightning-button
+                                    label="Open Load"
+                                    variant="neutral"
+                                    onclick={viewCreatedRecord}>
+                                </lightning-button>
+                            </template>
+
+                            <template if:true={hasUploadRawJson}>
+                                <lightning-button
+                                    label="Raw JSON"
+                                    variant="neutral"
+                                    onclick={openUploadRawJsonModal}>
+                                </lightning-button>
+                            </template>
+
+                            <template if:true={showAutoFillReview}>
+                                <lightning-button
+                                    label="Approve Draft"
+                                    variant="brand"
+                                    onclick={approveLoad}
+                                    disabled={approveButtonDisabled}>
+                                </lightning-button>
+
+                                <lightning-button
+                                    label="Reject Draft"
+                                    variant="destructive"
+                                    onclick={rejectLoad}
+                                    disabled={rejectButtonDisabled}>
+                                </lightning-button>
+                            </template>
+                        </div>
+                    </template>
+                </section>
+            </template>
+
+            <template if:true={showExtractSection}>
+                <section class="extract-card slds-m-top_medium">
+                    <div class="section-heading compact">
+                        <div>
+                            <p class="eyebrow">Extract result</p>
+                            <h2>Extracted fields</h2>
+                        </div>
+                                   <!-- <template if:true={hasUploadRawJson}>
+                                <lightning-button
+                                    label="Raw JSON"
+                                    variant="neutral"
+                                    onclick={openUploadRawJsonModal}>
+                                </lightning-button>
+                            </template> -->
+                        <div class="history-actions">
+                            <template if:true={formattedConfidence}>
+                                <span class="confidence-pill">{formattedConfidence}</span>
+                            </template>
+                            <template if:true={formattedClassificationConfidence}>
+                                <span class="confidence-pill">{formattedClassificationConfidence}</span>
+                            </template>
+                        </div>
+                    </div>
+
+                    <template if:true={isLoadingExtract}>
+                        <div class="loading-row slds-m-top_small">
+                            <lightning-spinner alternative-text="Loading extracted fields" size="small"></lightning-spinner>
+                            <span>Loading extracted fields...</span>
+                        </div>
+                    </template>
+
+                    <template if:true={hasExtractRows}>
+                        <div class="extract-table-wrap slds-m-top_medium">
+                            <table class="extract-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Field</th>
+                                        <th scope="col">Value</th>
+                                        <th scope="col">Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={extractRows} for:item="row">
+                                        <tr key={row.id}>
+                                            <td>
+                                                <span class="field-name">{row.label}</span>
+                                            </td>
+                                            <td>
+                                                <span class="field-value">{row.displayValue}</span>
+                                            </td>
+                                            <td>
+                                                <span class="field-value">{row.confidenceLabel}</span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                </section>
+            </template>
+        </lightning-tab>
+
+
+        <!-- SECTION 2: DRAFT ITEMS -->
+        <lightning-tab label="Draft Items" value="drafts">
+            <section class="extract-card draft-card slds-m-top_medium">
+                <div class="section-heading compact">
+                    <div>
+                        <p class="eyebrow">AutoFill review queue</p>
+                        <h2>Draft items</h2>
+                        <p class="muted slds-m-top_x-small">
+                            AutoFill-created loads waiting for review. Approve keeps the Load and its attached files. Reject moves the draft Load to the recycle bin and deletes the files uploaded through AutoFill.
+                        </p>
+                    </div>
+
+                    <div class="history-actions">
+                        <span class="confidence-pill">{draftLoadsMetaLabel}</span>
+                        <lightning-button
+                            label="Refresh"
+                            variant="neutral"
+                            disabled={isLoadingDraftLoads}
+                            onclick={refreshDraftLoads}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <div class="draft-toolbar slds-m-top_medium">
+                    <div class="draft-search-bar">
+                        <lightning-input
+                            class="draft-search-input"
+                            type="search"
+                            label="Search draft items"
+                            variant="label-hidden"
+                            placeholder="Search by load or route, for example L-1758 or Phoenix → Dallas"
+                            value={draftLoadsSearchInput}
+                            disabled={isLoadingDraftLoads}
+                            onchange={handleDraftLoadsSearchChange}
+                            onkeydown={handleDraftLoadsSearchKeydown}>
+                        </lightning-input>
+
+                        <lightning-button
+                            label="Search"
+                            variant="brand"
+                            icon-name="utility:search"
+                            disabled={isLoadingDraftLoads}
+                            onclick={searchDraftLoads}>
+                        </lightning-button>
+
+                        <lightning-button
+                            label="Clear"
+                            variant="neutral"
+                            icon-name="utility:close"
+                            disabled={disableDraftLoadsClear}
+                            onclick={clearDraftLoadsSearch}>
+                        </lightning-button>
+                    </div>
+
+                    <!-- <div class="draft-toolbar-note">
+                        <lightning-icon
+                            icon-name="utility:email"
+                            size="xx-small"
+                            alternative-text="Email source">
+                        </lightning-icon>
+                        Webhook items are shown as Email.
+                    </div> -->
+                </div>
+
+                <template if:true={isLoadingDraftLoads}>
+                    <div class="loading-row slds-m-top_small">
+                        <lightning-spinner alternative-text="Loading draft items" size="small"></lightning-spinner>
+                        <span>Loading draft items...</span>
+                    </div>
+                </template>
+
+                <template if:true={draftLoadsErrorMessage}>
+                    <div class="slds-text-color_error slds-m-top_small">
+                        {draftLoadsErrorMessage}
+                    </div>
+                </template>
+
+                <template if:true={hasDraftLoads}>
+                    <div class="extract-table-wrap slds-m-top_medium history-table-wrap">
+                        <table class="extract-table draft-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Load</th>
+                                    <th scope="col">Route</th>
+                                    <th scope="col">Source</th>
+                                    <th scope="col">Document Type</th>
+                                    <th scope="col">Confidence</th>
+                                    <th scope="col">Saved to Load</th>
+                                    <!-- <th scope="col">Not Added</th> -->
+                                    <th scope="col">Created</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={draftLoads} for:item="load">
+                                    <tr key={load.id}>
+                                        <td data-label="Load">
+                                            <div class="draft-load-cell">
+                                                <span class="draft-load-icon" aria-hidden="true">
+                                                    <lightning-icon
+                                                        icon-name="standard:shipment"
+                                                        size="small"
+                                                        alternative-text="">
+                                                    </lightning-icon>
+                                                </span>
+                                                <div>
+                                                    <span class="field-name">{load.loadName}</span>
+                                                    <template if:true={load.itemId}>
+                                                        <span class="draft-subtext mono">{load.itemId}</span>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td data-label="Route">
+                                            <span class="route-value">{load.routeLabel}</span>
+                                        </td>
+                                        <td data-label="Source">
+                                            <span class={load.sourceClass}>
+                                                <lightning-icon
+                                                    icon-name={load.sourceIcon}
+                                                    size="xx-small"
+                                                    alternative-text="">
+                                                </lightning-icon>
+                                                {load.sourceLabel}
+                                            </span>
+                                        </td>
+                                        <td data-label="Document Type">
+                                            <span class="document-chip">{load.documentTypeLabel}</span>
+                                        </td>
+                                        <td data-label="Confidence">
+                                            <span class="confidence-value">{load.classificationConfidenceLabel}</span>
+                                        </td>
+                                        <td data-label="Saved to Load">
+                                            <span class="field-count-chip">{load.savedFieldCountLabel}</span>
+                                        </td>
+                                        <!-- <td><span class="field-value">{load.notSavedFieldCountLabel}</span></td> -->
+                                        <td data-label="Created">
+                                            <span class="created-value">{load.createdDateLabel}</span>
+                                        </td>
+                                        <td data-label="Status">
+                                            <span class={load.statusClass}>{load.displayStatus}</span>
+                                        </td>
+                                        <td data-label="Actions">
+                                            <div class="draft-row-actions">
+                                                <lightning-button
+                                                    label="Open"
+                                                    icon-name="utility:new_window"
+                                                    variant="neutral"
+                                                    data-id={load.id}
+                                                    onclick={viewDraftLoad}>
+                                                </lightning-button>
+
+                                                <lightning-button
+                                                    label="Fields"
+                                                    icon-name="utility:table"
+                                                    variant="neutral"
+                                                    data-id={load.id}
+                                                    disabled={load.noDetectedFields}
+                                                    onclick={openDetectedFieldsModal}>
+                                                </lightning-button>
+
+                                                <lightning-button
+                                                    label="JSON"
+                                                    icon-name="utility:code_playground"
+                                                    variant="neutral"
+                                                    data-id={load.id}
+                                                    disabled={load.noRawJson}
+                                                    onclick={openDraftRawJsonModal}>
+                                                </lightning-button>
+
+                                                <lightning-button
+                                                    label="Approve"
+                                                    icon-name="utility:success"
+                                                    variant="brand"
+                                                    data-id={load.id}
+                                                    disabled={disableDraftActions}
+                                                    onclick={openApproveDraftModal}>
+                                                </lightning-button>
+
+                                                <lightning-button
+                                                    label="Reject"
+                                                    icon-name="utility:delete"
+                                                    variant="destructive"
+                                                    data-id={load.id}
+                                                    disabled={disableDraftActions}
+                                                    onclick={openRejectDraftModal}>
+                                                </lightning-button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="draft-pagination slds-m-top_medium">
+                        <span class="muted">{draftLoadsPageLabel}</span>
+
+                        <div class="button-row">
+                            <lightning-button
+                                label="Previous"
+                                variant="neutral"
+                                disabled={disableDraftLoadsPrevious}
+                                onclick={previousDraftLoadsPage}>
+                            </lightning-button>
+
+                            <lightning-button
+                                label="Next"
+                                variant="neutral"
+                                disabled={disableDraftLoadsNext}
+                                onclick={nextDraftLoadsPage}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </template>
+
+                <template if:false={hasDraftLoads}>
+                    <template if:false={isLoadingDraftLoads}>
+                        <p class="empty-state slds-m-top_medium">
+                            {draftLoadsEmptyMessage}
+                        </p>
+                    </template>
+                </template>
+            </section>
+        </lightning-tab>
+
+        <!-- SECTION 3: TABLE -->
+        <!-- <lightning-tab label="Extracted Items Table" value="table">
+            <section class="extract-card slds-m-top_medium">
+                <div class="section-heading compact">
+                    <div>
+                        <p class="eyebrow">Extraction history</p>
+                        <h2>Recent extracted items</h2>
+                        <p class="muted slds-m-top_x-small">
+                            Latest items returned from FreightGraph AutoFill extraction.
+                        </p>
+                    </div>
+
+                    <div class="history-actions">
+                        <template if:true={extractedItemsTotal}>
+                            <span class="confidence-pill">{extractedItemsMetaLabel}</span>
+                        </template>
+
+                        <lightning-button
+                            label="Refresh"
+                            variant="neutral"
+                            disabled={isLoadingExtractedItems}
+                            onclick={refreshExtractedItems}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <template if:true={isLoadingExtractedItems}>
+                    <div class="loading-row slds-m-top_small">
+                        <lightning-spinner alternative-text="Loading extracted items" size="small"></lightning-spinner>
+                        <span>Loading extracted items...</span>
+                    </div>
+                </template>
+
+                <template if:true={extractedItemsErrorMessage}>
+                    <div class="slds-text-color_error slds-m-top_small">
+                        {extractedItemsErrorMessage}
+                    </div>
+                </template>
+
+                <template if:true={hasExtractedItemsRows}>
+                    <div class="extract-table-wrap slds-m-top_medium history-table-wrap">
+                        <table class="extract-table history-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Extracted At</th>
+                                    <th scope="col">Object</th>
+                                    <th scope="col">Record</th>
+                                    <th scope="col">Sender</th>
+                                    <th scope="col">Fields</th>
+                                    <th scope="col">Item ID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={extractedItemsRows} for:item="row">
+                                    <tr key={row.id}>
+                                        <td><span class="field-value">{row.formattedExtractedAt}</span></td>
+                                        <td><span class="status-pill default">{row.objectLabel}</span></td>
+                                        <td><span class="field-value">{row.recordLabel}</span></td>
+                                        <td><span class="field-value">{row.senderLabel}</span></td>
+                                        <td><span class="field-value">{row.fieldsLabel}</span></td>
+                                        <td><span class="field-value mono">{row.id}</span></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="button-row slds-m-top_medium">
+                        <lightning-button
+                            label="Previous"
+                            disabled={disableExtractedItemsPrevious}
+                            onclick={previousExtractedItemsPage}>
+                        </lightning-button>
+
+                        <lightning-button
+                            label="Next"
+                            disabled={disableExtractedItemsNext}
+                            onclick={nextExtractedItemsPage}>
+                        </lightning-button>
+                    </div>
+                </template>
+
+                <template if:false={hasExtractedItemsRows}>
+                    <template if:false={isLoadingExtractedItems}>
+                        <p class="empty-state slds-m-top_medium">
+                            No extracted items were returned yet.
+                        </p>
+                    </template>
+                </template>
+            </section>
+        </lightning-tab> -->
+
+                </lightning-tabset>
+            </div>
+        </div>
+
+        <template if:true={showApproveDraftModal}>
+            <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="approve-draft-heading" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeApproveDraftModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                        </button>
+                        <h2 id="approve-draft-heading" class="slds-text-heading_medium">Approve AutoFill draft?</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <p>This will mark the draft load as Approved.</p>
+                        <template if:true={selectedReviewLoad}>
+                            <p class="slds-m-top_small"><strong>Load:</strong> {selectedReviewLoad.loadName}</p>
+                            <p><strong>Source:</strong> {selectedReviewLoad.sourceLabel}</p>
+                            <p><strong>Document Type:</strong> {selectedReviewLoad.documentTypeLabel}</p>
+                            <p><strong>Classification Confidence:</strong> {selectedReviewLoad.classificationConfidenceLabel}</p>
+                            <p><strong>Saved to Load:</strong> {selectedReviewLoad.savedFieldCountLabel}</p>
+                            <p><strong>Detected but not added:</strong> {selectedReviewLoad.notSavedFieldCountLabel}</p>
+                            <p><strong>Confidence:</strong> {selectedReviewLoad.confidenceLabel}</p>
+                        </template>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Cancel" onclick={closeApproveDraftModal}></lightning-button>
+                        <lightning-button class="slds-m-left_small" label="Approve" variant="brand" disabled={disableDraftActions} onclick={confirmApproveDraftLoad}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <template if:true={showRejectDraftModal}>
+            <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="reject-draft-heading" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeRejectDraftModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                        </button>
+                        <h2 id="reject-draft-heading" class="slds-text-heading_medium">Reject AutoFill draft?</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <p>This will delete the draft Load and the files uploaded through AutoFill. This action cannot be undone from this screen.</p>
+                        <lightning-textarea
+                            class="slds-m-top_medium"
+                            label="Reject reason"
+                            value={rejectionReason}
+                            onchange={handleRejectReasonChange}
+                            placeholder="Add the reason this AutoFill draft should not be approved">
+                        </lightning-textarea>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Cancel" onclick={closeRejectDraftModal}></lightning-button>
+                        <lightning-button class="slds-m-left_small" label="Reject" variant="destructive" disabled={disableDraftActions} onclick={confirmRejectDraftLoad}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <template if:true={showDetectedFieldsModal}>
+            <section
+                role="dialog"
+                tabindex="-1"
+                aria-modal="true"
+                aria-labelledby="detected-fields-heading"
+                class="slds-modal slds-fade-in-open slds-modal_large detected-fields-modal">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button
+                            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            title="Close"
+                            onclick={closeDetectedFieldsModal}>
+                            <lightning-icon
+                                icon-name="utility:close"
+                                alternative-text="Close"
+                                size="small">
+                            </lightning-icon>
+                        </button>
+                        <h2 id="detected-fields-heading" class="slds-text-heading_medium">
+                            {detectedFieldsModalTitle}
+                        </h2>
+                    </header>
+
+                    <div class="slds-modal__content detected-fields-review-content">
+                        <div class="detected-fields-review-layout">
+                            <div class="detected-fields-pane slds-p-around_medium">
+                                <template if:true={hasDetectedFieldsSavedRows}>
+                                    <h3 class="slds-text-heading_small slds-m-bottom_small">
+                                        Saved to Load ({detectedFieldsSavedCountLabel})
+                                    </h3>
+                                    <div class="extract-table-wrap">
+                                        <table class="extract-table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Detected Field → Load Field</th>
+                                                    <th scope="col">Value</th>
+                                                    <th scope="col">Confidence</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={detectedFieldsSavedRows} for:item="row">
+                                                    <tr key={row.id}>
+                                                        <td><span class="field-name">{row.label}</span></td>
+                                                        <td><span class="field-value">{row.displayValue}</span></td>
+                                                        <td><span class="field-value">{row.confidenceLabel}</span></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+
+                                <template if:true={hasDetectedFieldsNotSavedRows}>
+                                    <h3 class="slds-text-heading_small slds-m-top_medium slds-m-bottom_small">
+                                        Detected but not added to Load ({detectedFieldsNotSavedCountLabel})
+                                    </h3>
+                                    <div class="extract-table-wrap">
+                                        <table class="extract-table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Detected Field</th>
+                                                    <th scope="col">Value</th>
+                                                    <th scope="col">Confidence</th>
+                                                    <th scope="col">Reason</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={detectedFieldsNotSavedRows} for:item="row">
+                                                    <tr key={row.id}>
+                                                        <td><span class="field-name">{row.label}</span></td>
+                                                        <td><span class="field-value">{row.displayValue}</span></td>
+                                                        <td><span class="field-value">{row.confidenceLabel}</span></td>
+                                                        <td><span class="field-value">{row.reasonLabel}</span></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+
+                                <template if:true={hasDetectedFieldsChildTables}>
+                                    <div class="slds-m-top_large">
+                                        <h3 class="slds-text-heading_small slds-m-bottom_small">
+                                            Child records from V2
+                                        </h3>
+
+                                        <template for:each={detectedFieldsChildTables} for:item="childTable">
+                                            <section key={childTable.id} class="slds-box slds-m-top_small">
+                                                <h4 class="slds-text-heading_small">
+                                                    {childTable.label} ({childTable.rowCountLabel})
+                                                </h4>
+
+                                                <div class="extract-table-wrap slds-m-top_small">
+                                                    <table class="extract-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th scope="col">#</th>
+                                                                <template for:each={childTable.columns} for:item="column">
+                                                                    <th key={column.id} scope="col">{column.label}</th>
+                                                                </template>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <template for:each={childTable.rows} for:item="childRow">
+                                                                <tr key={childRow.id}>
+                                                                    <td><span class="field-value">{childRow.indexLabel}</span></td>
+                                                                    <template for:each={childRow.cells} for:item="cell">
+                                                                        <td key={cell.id}>
+                                                                            <span class="field-value">{cell.displayValue}</span>
+                                                                            <template if:true={cell.hasConfidence}>
+                                                                                <span class="draft-subtext">{cell.confidenceLabel} confidence</span>
+                                                                            </template>
+                                                                        </td>
+                                                                    </template>
+                                                                </tr>
+                                                            </template>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </section>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- <template if:true={hasDetectedFieldsRawRows}>
+                                    <h3 class="slds-text-heading_small slds-m-top_medium slds-m-bottom_small">
+                                        Raw detected fields from API ({detectedFieldsRawCountLabel})
+                                    </h3>
+                                    <div class="extract-table-wrap">
+                                        <table class="extract-table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Raw Field</th>
+                                                    <th scope="col">Value</th>
+                                                    <th scope="col">Confidence</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={detectedFieldsRawRows} for:item="row">
+                                                    <tr key={row.id}>
+                                                        <td><span class="field-name">{row.label}</span></td>
+                                                        <td><span class="field-value">{row.displayValue}</span></td>
+                                                        <td><span class="field-value">{row.confidenceLabel}</span></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template> -->
+
+                                <template if:false={hasDetectedFieldsModalRows}>
+                                    <div class="empty-state">
+                                        No detected field JSON was saved for this draft load.
+                                    </div>
+                                </template>
+                            </div>
+
+                            <aside class="detected-preview-pane">
+                                <div class="detected-preview-header">
+                                    <div>
+                                        <p class="eyebrow">Source document</p>
+                                        <h3 class="detected-preview-title">{selectedDetectedFilePreviewHeading}</h3>
+                                    </div>
+                                    <template if:true={hasSelectedDetectedFile}>
+                                        <lightning-button
+                                            label="Open full preview"
+                                            icon-name="utility:new_window"
+                                            onclick={openDetectedFileInSalesforce}>
+                                        </lightning-button>
+                                    </template>
+                                </div>
+
+                                <template if:true={hasDetectedFieldsFiles}>
+                                    <div class="detected-file-selector" role="tablist">
+                                        <template for:each={detectedFieldsFiles} for:item="file">
+                                            <lightning-button
+                                                key={file.contentDocumentId}
+                                                data-id={file.contentDocumentId}
+                                                label={file.title}
+                                                title={file.title}
+                                                variant={file.buttonVariant}
+                                                onclick={selectDetectedFilePreview}>
+                                            </lightning-button>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <div class="detected-preview-body">
+                                    <template if:true={selectedDetectedFileCanInlinePreview}>
+                                        <div class="pdf-rendition-preview">
+                                            <img
+                                                class="pdf-rendition-image"
+                                                src={selectedDetectedFilePreviewUrl}
+                                                alt={selectedDetectedFileTitle}
+                                                onload={handleDetectedPreviewLoad}
+                                                onerror={handleDetectedPreviewError} />
+                                        </div>
+                                    </template>
+
+                                    <template if:true={isLoadingDetectedFilePreview}>
+                                        <div class="preview-loading-overlay">
+                                            <lightning-spinner
+                                                alternative-text="Rendering file preview"
+                                                size="medium">
+                                            </lightning-spinner>
+                                            <p>{selectedDetectedFileLoadingText}</p>
+                                        </div>
+                                    </template>
+
+                                    <template if:true={detectedFilePreviewError}>
+                                        <div class="preview-state preview-state-error preview-error-overlay">
+                                            <lightning-icon
+                                                icon-name="utility:error"
+                                                alternative-text="Preview error"
+                                                size="small">
+                                            </lightning-icon>
+                                            <p>{detectedFilePreviewError}</p>
+                                        </div>
+                                    </template>
+
+                                    <template if:true={showDetectedSourceTextPreview}>
+                                        <div class="detected-text-preview">
+                                            <div class="detected-text-preview-label">
+                                                Email or document context
+                                            </div>
+                                            <div class="detected-text-preview-content">{detectedSourceText}</div>
+                                        </div>
+                                    </template>
+
+                                    <template if:true={showUnsupportedDetectedFilePreview}>
+                                        <div class="preview-state">
+                                            <lightning-icon
+                                                icon-name="doctype:attachment"
+                                                alternative-text="Attached file"
+                                                size="large">
+                                            </lightning-icon>
+                                            <p>{selectedDetectedFileTitle}</p>
+                                            <p class="muted">
+                                                Inline preview is available for PDF and image files. Use Open full preview for this file.
+                                            </p>
+                                        </div>
+                                    </template>
+
+                                    <template if:true={showNoDetectedFilePreview}>
+                                        <div class="preview-state">
+                                            <lightning-icon
+                                                icon-name="doctype:pdf"
+                                                alternative-text="No source file attached"
+                                                size="large">
+                                            </lightning-icon>
+                                            <p>No AutoFill source file is attached to this Load.</p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </aside>
+                        </div>
+                    </div>
+
+                    <footer class="slds-modal__footer">
+                        <lightning-button
+                            label="Close"
+                            onclick={closeDetectedFieldsModal}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+
+        <template if:true={showRawJsonModal}>
+            <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="raw-json-heading" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeRawJsonModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                        </button>
+                        <h2 id="raw-json-heading" class="slds-text-heading_medium">{rawJsonModalTitle}</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <template if:true={hasRawJsonText}>
+                            <lightning-textarea
+                                label="Raw JSON"
+                                value={rawJsonText}
+                                readonly>
+                            </lightning-textarea>
+                        </template>
+                        <template if:false={hasRawJsonText}>
+                            <p>No raw API response was saved for this draft load.</p>
+                        </template>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Close" onclick={closeRawJsonModal}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+    </lightning-card>
+</template>

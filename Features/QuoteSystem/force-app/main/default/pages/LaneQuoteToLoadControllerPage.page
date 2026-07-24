@@ -1,0 +1,387 @@
+<apex:page controller="LaneQuoteToLoadController"
+    lightningStylesheets="true"
+    showHeader="true"
+    sidebar="false"
+    docType="html-5.0">
+
+    <apex:form id="conversionForm">
+
+        <apex:pageMessages id="messages"/>
+
+        <apex:actionStatus id="saveStatus">
+            <apex:facet name="start">
+                <div class="loadingBackdrop">
+                    <div class="loadingBox">
+                        Converting Lane Quote to Load...
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+
+        <apex:pageBlock title="Convert Lane Quote to Load"
+            mode="edit">
+
+            <apex:pageBlockButtons location="top">
+
+                <apex:commandButton value="Convert to Load"
+                    action="{!convertToLoad}"
+                    status="saveStatus"/>
+
+                <apex:commandButton value="Cancel"
+                    action="{!cancel}"
+                    immediate="true"/>
+
+            </apex:pageBlockButtons>
+
+            <apex:pageBlockSection title="Conversion Options"
+                columns="1"
+                collapsible="false">
+
+                <apex:pageBlockSectionItem >
+
+                    <apex:outputLabel value="Load Record Type"
+                        for="loadRecordType"/>
+
+                    <apex:selectList id="loadRecordType"
+                        value="{!selectedLoadRecordTypeId}"
+                        size="1"
+                        required="true">
+
+                        <apex:selectOptions value="{!loadRecordTypeOptions}"/>
+
+                    </apex:selectList>
+
+                </apex:pageBlockSectionItem>
+
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="Lane Quote Information"
+                columns="2"
+                collapsible="true">
+
+                <apex:repeat value="{!laneQuoteFields}"
+                    var="field">
+
+                    <apex:pageBlockSectionItem >
+
+                        <apex:outputLabel value="{!field.label}"/>
+
+                        <apex:inputField value="{!laneQuoteRecord[field.apiName]}"/>
+
+                    </apex:pageBlockSectionItem>
+
+                </apex:repeat>
+
+            </apex:pageBlockSection>
+
+            <!-- Quote Lines -->
+            <apex:pageBlockSection title="Quote Lines"
+                columns="1"
+                collapsible="true">
+
+                <apex:commandButton value="Add Quote Line"
+                    action="{!addQuoteLine}"
+                    rerender="quoteLinePanel,messages"/>
+
+                <apex:outputPanel id="quoteLinePanel"
+                    layout="block">
+
+                    <apex:variable var="lineIndex"
+                        value="{!0}"/>
+
+                    <apex:repeat value="{!quoteLines}"
+                        var="row">
+
+                        <div class="childRecord">
+
+                            <div class="childHeader">
+                                <span>
+                                    Quote Line {!lineIndex + 1}
+                                </span>
+
+                                <apex:commandLink value="Remove"
+                                    action="{!removeQuoteLine}"
+                                    immediate="true"
+                                    rerender="quoteLinePanel,messages">
+
+                                    <apex:param value="{!lineIndex}"
+                                        assignTo="{!rowIndex}"/>
+
+                                </apex:commandLink>
+                            </div>
+
+                            <div class="fieldGrid">
+
+                                <apex:repeat value="{!quoteLineFields}"
+                                    var="field">
+
+                                    <div class="fieldContainer">
+
+                                        <apex:outputLabel value="{!field.label}"/>
+
+                                        <apex:inputField value="{!row.record[field.apiName]}"/>
+
+                                    </div>
+
+                                </apex:repeat>
+
+                            </div>
+
+                        </div>
+
+                        <apex:variable var="lineIndex"
+                            value="{!lineIndex + 1}"/>
+
+                    </apex:repeat>
+
+                    <apex:outputPanel rendered="{!quoteLines.size = 0}">
+
+                        <div class="emptyMessage">
+                            No Quote Lines.
+                        </div>
+
+                    </apex:outputPanel>
+
+                </apex:outputPanel>
+
+            </apex:pageBlockSection>
+
+            <!-- Quote Pays -->
+            <apex:pageBlockSection title="Quote Pays"
+                columns="1"
+                collapsible="true">
+
+                <apex:commandButton value="Add Quote Pay"
+                    action="{!addQuotePay}"
+                    rerender="quotePayPanel,messages"/>
+
+                <apex:outputPanel id="quotePayPanel"
+                    layout="block">
+
+                    <apex:variable var="payIndex"
+                        value="{!0}"/>
+
+                    <apex:repeat value="{!quotePays}"
+                        var="row">
+
+                        <div class="childRecord">
+
+                            <div class="childHeader">
+                                <span>
+                                    Quote Pay {!payIndex + 1}
+                                </span>
+
+                                <apex:commandLink value="Remove"
+                                    action="{!removeQuotePay}"
+                                    immediate="true"
+                                    rerender="quotePayPanel,messages">
+
+                                    <apex:param value="{!payIndex}"
+                                        assignTo="{!rowIndex}"/>
+
+                                </apex:commandLink>
+                            </div>
+
+                            <div class="fieldGrid">
+
+                                <apex:repeat value="{!quotePayFields}"
+                                    var="field">
+
+                                    <div class="fieldContainer">
+
+                                        <apex:outputLabel value="{!field.label}"/>
+
+                                        <apex:inputField value="{!row.record[field.apiName]}"/>
+
+                                    </div>
+
+                                </apex:repeat>
+
+                            </div>
+
+                        </div>
+
+                        <apex:variable var="payIndex"
+                            value="{!payIndex + 1}"/>
+
+                    </apex:repeat>
+
+                    <apex:outputPanel rendered="{!quotePays.size = 0}">
+
+                        <div class="emptyMessage">
+                            No Quote Pays.
+                        </div>
+
+                    </apex:outputPanel>
+
+                </apex:outputPanel>
+
+            </apex:pageBlockSection>
+
+            <!-- Quote Legs -->
+            <apex:pageBlockSection title="Quote Legs"
+                columns="1"
+                collapsible="true">
+
+                <apex:commandButton value="Add Quote Leg"
+                    action="{!addQuoteLeg}"
+                    rerender="quoteLegPanel,messages"/>
+
+                <apex:outputPanel id="quoteLegPanel"
+                    layout="block">
+
+                    <apex:variable var="legIndex"
+                        value="{!0}"/>
+
+                    <apex:repeat value="{!quoteLegs}"
+                        var="row">
+
+                        <div class="childRecord">
+
+                            <div class="childHeader">
+                                <span>
+                                    Quote Leg {!legIndex + 1}
+                                </span>
+
+                                <apex:commandLink value="Remove"
+                                    action="{!removeQuoteLeg}"
+                                    immediate="true"
+                                    rerender="quoteLegPanel,messages">
+
+                                    <apex:param value="{!legIndex}"
+                                        assignTo="{!rowIndex}"/>
+
+                                </apex:commandLink>
+                            </div>
+
+                            <div class="fieldGrid">
+
+                                <apex:repeat value="{!quoteLegFields}"
+                                    var="field">
+
+                                    <div class="fieldContainer">
+
+                                        <apex:outputLabel value="{!field.label}"/>
+
+                                        <apex:inputField value="{!row.record[field.apiName]}"/>
+
+                                    </div>
+
+                                </apex:repeat>
+
+                            </div>
+
+                        </div>
+
+                        <apex:variable var="legIndex"
+                            value="{!legIndex + 1}"/>
+
+                    </apex:repeat>
+
+                    <apex:outputPanel rendered="{!quoteLegs.size = 0}">
+
+                        <div class="emptyMessage">
+                            No Quote Legs.
+                        </div>
+
+                    </apex:outputPanel>
+
+                </apex:outputPanel>
+
+            </apex:pageBlockSection>
+
+            <apex:pageBlockButtons location="bottom">
+
+                <apex:commandButton value="Convert to Load"
+                    action="{!convertToLoad}"
+                    status="saveStatus"/>
+
+                <apex:commandButton value="Cancel"
+                    action="{!cancel}"
+                    immediate="true"/>
+
+            </apex:pageBlockButtons>
+
+        </apex:pageBlock>
+
+    </apex:form>
+
+    <style>
+        .childRecord {
+            background: #ffffff;
+            border: 1px solid #dddbda;
+            border-radius: 4px;
+            margin: 12px 0;
+            padding: 14px;
+        }
+
+        .childHeader {
+            align-items: center;
+            border-bottom: 1px solid #ecebea;
+            display: flex;
+            font-size: 15px;
+            font-weight: 600;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+        }
+
+        .fieldGrid {
+            display: grid;
+            gap: 14px 24px;
+            grid-template-columns:
+                repeat(2, minmax(250px, 1fr));
+        }
+
+        .fieldContainer label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .fieldContainer input,
+        .fieldContainer select,
+        .fieldContainer textarea {
+            box-sizing: border-box;
+            max-width: 100%;
+            width: 100%;
+        }
+
+        .emptyMessage {
+            background: #f3f3f3;
+            border-radius: 4px;
+            margin-top: 10px;
+            padding: 14px;
+        }
+
+        .loadingBackdrop {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.65);
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            left: 0;
+            position: fixed;
+            right: 0;
+            top: 0;
+            z-index: 99999;
+        }
+
+        .loadingBox {
+            background: #ffffff;
+            border: 1px solid #dddbda;
+            border-radius: 5px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+            font-size: 16px;
+            font-weight: 600;
+            padding: 24px 35px;
+        }
+
+        @media only screen and (max-width: 800px) {
+            .fieldGrid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+</apex:page>

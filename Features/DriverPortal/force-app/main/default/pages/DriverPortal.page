@@ -1,0 +1,126 @@
+<apex:page showHeader="false"
+           sidebar="false"
+           standardStylesheets="false"
+           applyHtmlTag="false"
+           applyBodyTag="false"
+           docType="html-5.0">
+
+    <html>
+        <head>
+            <meta charset="UTF-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+            <meta name="theme-color" content="#F18DA1"/>
+            <title>Driver-Carrier Portal</title>
+
+            <style>
+                :root {
+                --portal-page-bg: #ffffff;
+                --portal-shell-bg: #ffffff;
+                --portal-panel-bg: #ffffff;
+                --portal-panel-bg-2: #ffffff;
+                --portal-card-bg: #ffffff;
+                --portal-card-header-bg: #ffffff;
+
+                --portal-brand: #2196F3;
+                --portal-brand-dark: #1976D2;
+                --portal-brand-light: #2F80ED;
+                --portal-brand-soft: #dfedff;
+
+                --portal-text: #FFFFFF;
+                --portal-muted: #AFC0D4;
+                --portal-border: #d6e8ff;
+                }
+
+                html,
+                body {
+                margin: 0;
+                padding: 0;
+                min-height: 100%;
+                background: var(--portal-page-bg);
+                font-family: Arial, Helvetica, sans-serif;
+                color: var(--portal-text);
+                }
+
+                body {
+                -webkit-text-size-adjust: 100%;
+                text-size-adjust: 100%;
+                }
+
+                .page-shell {
+                max-width: 765px;
+                margin: 0 auto;
+                min-height: 100vh;
+                background: var(--portal-shell-bg);
+                box-shadow: 0 0 24px rgba(0, 0, 0, 0.28);
+                }
+
+                .portal-loading {
+                padding: 24px;
+                text-align: center;
+                color: var(--portal-muted);
+                font-weight: 700;
+                }
+
+                .noscript-message {
+                margin: 20px;
+                padding: 16px;
+                background: var(--portal-panel-bg);
+                border: 1px solid var(--portal-border);
+                color: var(--portal-text);
+                border-radius: 8px;
+                font-weight: 700;
+                }
+
+                @media screen and (max-width: 765px) {
+                .page-shell {
+                max-width: 100%;
+                box-shadow: none;
+                }
+                }
+            </style>
+        </head>
+
+        <body>
+            <div class="page-shell">
+                <noscript>
+                <div class="noscript-message">
+                    JavaScript is required to use the Driver-Carrier Portal.
+                    </div>
+                    </noscript>
+
+                    <apex:includeLightning />
+
+                        <div id="driverPortalContainer">
+
+                                </div>
+
+                                <script>
+                                    (function() {
+                                        var siteEndpoint =
+                                            "https://wise-koala-63tngo-dev-ed.trailblaze.my.salesforce-sites.com";
+
+                                        var params = new URLSearchParams(window.location.search);
+                                        var portalToken = params.get("t") || params.get("token");
+
+                                        $Lightning.use(
+                                            "c:DriverLoadPortalApp",
+                                            function() {
+                                                $Lightning.createComponent(
+                                                    "c:driverLoadPortal",
+                                                    {
+                                                        portalToken: portalToken
+                                                    },
+                                                    "driverPortalContainer",
+                                                    function(component) {
+                                                        console.log("Driver Load Portal loaded");
+                                                    }
+                                                );
+                                            },
+                                            siteEndpoint
+                                        );
+                                    })();
+                </script>
+            </div>
+        </body>
+    </html>
+</apex:page>

@@ -1,0 +1,238 @@
+<template>
+    <section class="documents-wrap">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading document page" size="small"></lightning-spinner>
+        </template>
+        <template if:true={errorMessage}>
+            <div class="empty-box">{errorMessage}</div>
+        </template>
+        <div class="documents-header">
+            <div>
+                <p class="eyebrow">Documents Queue</p>
+                <h2>POD, Bill, and Invoice Readiness</h2>
+                <span>{documentCountLabel}</span>
+            </div>
+
+            <div class="header-actions">
+                <button class="ghost-btn" onclick={handleClearFilters}>Clear Filters</button>
+                <button class="blue-btn" onclick={handleRefresh}>Refresh Queue</button>
+            </div>
+        </div>
+
+        <section class="document-kpis">
+            <article class="kpi-card hero-kpi">
+                <span>Total Loads</span>
+                <strong>{totalCount}</strong>
+                <small>Loaded document records</small>
+            </article>
+
+            <article class="kpi-card red-kpi">
+                <span>Missing POD</span>
+                <strong>{missingPodCount}</strong>
+                <small>Needs attention</small>
+            </article>
+
+            <article class="kpi-card green-kpi">
+                <span>Complete</span>
+                <strong>{completeCount}</strong>
+                <small>POD received</small>
+            </article>
+
+            <article class="kpi-card blue-kpi">
+                <span>Ready to Invoice</span>
+                <strong>{readyToInvoiceCount}</strong>
+                <small>Billing-ready loads</small>
+            </article>
+
+            <article class="kpi-card yellow-kpi">
+                <span>Waiting</span>
+                <strong>{waitingCount}</strong>
+                <small>Pending document status</small>
+            </article>
+        </section>
+
+        <section class="documents-layout">
+            <aside class="priority-panel">
+                <div class="panel-header">
+                    <p class="eyebrow">Priority</p>
+                    <h3>Document Status</h3>
+                </div>
+
+                <div class="priority-list">
+                    <button class={allViewClass} data-view="all" onclick={handleViewChange}>
+                        <span class="priority-dot all"></span>
+                        All Documents
+                        <strong>{totalCount}</strong>
+                    </button>
+
+                    <button class={missingViewClass} data-view="missingPod" onclick={handleViewChange}>
+                        <span class="priority-dot red"></span>
+                        Missing POD
+                        <strong>{missingPodCount}</strong>
+                    </button>
+
+                    <button class={readyViewClass} data-view="readyToInvoice" onclick={handleViewChange}>
+                        <span class="priority-dot blue"></span>
+                        Ready to Invoice
+                        <strong>{readyToInvoiceCount}</strong>
+                    </button>
+
+                    <button class={waitingViewClass} data-view="waiting" onclick={handleViewChange}>
+                        <span class="priority-dot yellow"></span>
+                        Waiting
+                        <strong>{waitingCount}</strong>
+                    </button>
+
+                    <button class={completeViewClass} data-view="complete" onclick={handleViewChange}>
+                        <span class="priority-dot green"></span>
+                        Complete
+                        <strong>{completeCount}</strong>
+                    </button>
+                </div>
+
+                <template if:true={selectedDocument}>
+                    <div class="selected-doc-card">
+                        <p class="eyebrow">Selected Load</p>
+                        <h3>{selectedDocument.Name}</h3>
+
+                        <div class="doc-status-badge-wrap">
+                            <span class={selectedDocument.statusClass}>
+                                {selectedDocument.statusLabel}
+                            </span>
+                        </div>
+
+                        <div class="selected-doc-grid">
+                            <div>
+                                <span>Customer</span>
+                                <strong>{selectedDocument.customerName}</strong>
+                            </div>
+
+                            <div>
+                                <span>Carrier</span>
+                                <strong>{selectedDocument.carrierName}</strong>
+                            </div>
+
+                            <div>
+                                <span>POD</span>
+                                <strong>{selectedDocument.podLabel}</strong>
+                            </div>
+
+                            <div>
+                                <span>Invoice</span>
+                                <strong>{selectedDocument.invoiceStatus}</strong>
+                            </div>
+
+                            <div>
+                                <span>Bill Status</span>
+                                <strong>{selectedDocument.billStatus}</strong>
+                            </div>
+
+                            <div>
+                                <span>Delivery</span>
+                                <strong>{selectedDocument.deliveryDateLabel}</strong>
+                            </div>
+                        </div>
+
+                        <div class="selected-doc-actions">
+                            <button onclick={handleOpenSelectedLoad}>Open Load</button>
+                            <button onclick={handleEmailSelectedCarrier} disabled={selectedCarrierEmailDisabled}>
+                                Email Carrier
+                            </button>
+                            <button onclick={handlePingSelectedDriver}>Ping Driver 💬📍</button>
+                            <button onclick={handleGenerateInvoice}>Generate Invoice</button>
+                        </div>
+                    </div>
+                </template>
+            </aside>
+
+            <main class="queue-panel">
+                <div class="queue-toolbar">
+                    <div class="search-wrap">
+                        <label>Search Documents</label>
+                        <input
+                            type="search"
+                            value={searchKey}
+                            oninput={handleSearchChange}
+                            placeholder="Search load, customer, carrier, city, status..." />
+                    </div>
+
+                    <span>{filteredCountLabel}</span>
+                </div>
+
+                <div class="document-table">
+                    <div class="table-header">
+                        <span>Status</span>
+                        <span>Load</span>
+                        <span>Route</span>
+                        <span>Customer</span>
+                        <span>Carrier</span>
+                        <span>Bill / Invoice</span>
+                        <span>Actions</span>
+                    </div>
+
+                    <template if:true={hasDocuments}>
+                        <template for:each={paginatedDocumentRows} for:item="doc">
+                            <article
+                                key={doc.Id}
+                                class={doc.rowClass}
+                                data-id={doc.Id}
+                                onclick={handleRowSelect}>
+
+                                <div>
+                                    <span class={doc.statusClass}>{doc.statusLabel}</span>
+                                </div>
+
+                                <div>
+                                    <strong class="load-number">{doc.Name}</strong>
+                                    <small>{doc.deliveryDateLabel}</small>
+                                </div>
+
+                                <div>
+                                    <strong>{doc.route}</strong>
+                                    <small>{doc.routeStates}</small>
+                                </div>
+
+                                <div>
+                                    <strong>{doc.customerName}</strong>
+                                </div>
+
+                                <div>
+                                    <strong>{doc.carrierName}</strong>
+                                    <small>{doc.carrierEmailLabel}</small>
+                                </div>
+
+                                <div>
+                                    <strong>{doc.billStatus}</strong>
+                                    <small>{doc.invoiceStatus}</small>
+                                </div>
+
+                                <div class="row-actions">
+                                    <button data-id={doc.Id} onclick={handleOpenLoad}>View</button>
+                                    <button data-id={doc.Id} onclick={handleGenerateInvoiceFromRow}>Invoice</button>
+                                </div>
+                            </article>
+                        </template>
+                    </template>
+
+                    <template if:false={hasDocuments}>
+                        <div class="empty-box">No document records found for the selected filters.</div>
+                    </template>
+
+                    <template if:true={hasDocuments}>
+                        <div class="pagination-bar">
+                            <span>{pageRangeLabel}</span>
+
+                            <div class="pagination-controls">
+                                <button onclick={handleFirstPage} disabled={previousDisabled} title="First page">«</button>
+                                <button onclick={handlePreviousPage} disabled={previousDisabled}>Previous</button>
+                                <strong>Page {pageNumber} of {totalPages}</strong>
+                                <button onclick={handleNextPage} disabled={nextDisabled}>Next</button>
+                                <button onclick={handleLastPage} disabled={nextDisabled} title="Last page">»</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </main>
+        </section>
+    </section>
+</template>

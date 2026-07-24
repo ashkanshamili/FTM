@@ -1,0 +1,90 @@
+<apex:page showHeader="false"
+    sidebar="false"
+    standardStylesheets="false"
+    applyHtmlTag="false"
+    applyBodyTag="false"
+    docType="html-5.0">
+
+    <html>
+        <head>
+            <meta charset="UTF-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+            <meta name="theme-color" content="#0B1A30"/>
+            <title>Private Loadboard</title>
+            <style>
+                html, body {
+                    margin: 0;
+                    padding: 0;
+                    min-height: 100%;
+                    background: #0B1A30;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+                #loadBoardContainer { min-height: 100vh; }
+                .portal-loading {
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #AFC0D4;
+                    font-weight: 700;
+                }
+                .portal-error {
+                    margin: 20px;
+                    padding: 16px;
+                    border: 1px solid #FECACA;
+                    border-radius: 8px;
+                    background: #FEF2F2;
+                    color: #991B1B;
+                    font-weight: 700;
+                }
+            </style>
+        </head>
+        <body>
+            <apex:includeLightning />
+            <div id="loadBoardLoading" class="portal-loading">Loading Private Loadboard...</div>
+            <div id="loadBoardError"></div>
+            <div id="loadBoardContainer"></div>
+            <script>
+                (function () {
+                    "use strict";
+                    var loading = document.getElementById("loadBoardLoading");
+                    var errorBox = document.getElementById("loadBoardError");
+
+                    function hideLoading() {
+                        if (loading) { loading.style.display = "none"; }
+                    }
+
+                    function showError(message) {
+                        hideLoading();
+                        if (!errorBox) { return; }
+                        errorBox.className = "portal-error";
+                        errorBox.textContent = message || "The Private Loadboard could not be loaded.";
+                    }
+
+                    try {
+                        $Lightning.use(
+                            "c:LoadBoardForCarrierOutApp",
+                            function () {
+                                $Lightning.createComponent(
+                                    "c:loadBoardForCarrier",
+                                    {},
+                                    "loadBoardContainer",
+                                    function (component, status, errorMessage) {
+                                        if (status === "SUCCESS") {
+                                            hideLoading();
+                                        } else {
+                                            showError(errorMessage || status);
+                                        }
+                                    }
+                                );
+                            },
+                            window.location.origin
+                        );
+                    } catch (error) {
+                        showError(error && error.message ? error.message : String(error));
+                    }
+                })();
+            </script>
+        </body>
+    </html>
+</apex:page>

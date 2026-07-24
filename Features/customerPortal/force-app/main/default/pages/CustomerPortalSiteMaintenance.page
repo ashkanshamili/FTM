@@ -1,0 +1,10 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" cache="false">
+<apex:composition template="CustomerPortalSiteTemplate">
+    <apex:define name="body">
+        <div class="cp-site-shell"><div class="cp-site-card">
+            <h1>Customer Portal</h1>
+            <p>The portal is temporarily unavailable. Please try again shortly.</p>
+        </div></div>
+    </apex:define>
+</apex:composition>
+</apex:page>
