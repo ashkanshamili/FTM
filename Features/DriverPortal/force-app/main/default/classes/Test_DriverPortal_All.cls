@@ -1,5 +1,5 @@
 @IsTest
-private class Test_DriverPortal_All2 {
+private class Test_DriverPortal_All {
 
     private class MockHttpResponseGenerator implements HttpCalloutMock {
         public HTTPResponse respond(HTTPRequest req) {

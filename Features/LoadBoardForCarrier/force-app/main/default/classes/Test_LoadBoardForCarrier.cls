@@ -1,5 +1,5 @@
 @IsTest(SeeAllData=false)
-private class Test_LoadBoardForCarrier_All3 {
+private class Test_LoadBoardForCarrier {
 
     private static Integer uniqueSequence = 0;
 
