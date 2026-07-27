@@ -33,7 +33,7 @@ public without sharing class CarrierOnboardingActionHandler {
         }
 
         Database.SaveResult[] results =
-            Database.update(carrierUpdates, false);
+            Database.update(carrierUpdates, false, AccessLevel.SYSTEM_MODE);
 
         for (Integer i = 0; i < results.size(); i++) {
             Database.SaveResult sr = results[i];
@@ -171,12 +171,13 @@ public without sharing class CarrierOnboardingActionHandler {
          */
         cv.FirstPublishLocationId = carrierId;
 
-        insert cv;
+        insert as system cv;
 
         ContentVersion insertedVersion = [
             SELECT Id, ContentDocumentId
             FROM ContentVersion
             WHERE Id = :cv.Id
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
 
