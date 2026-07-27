@@ -133,7 +133,7 @@ public without sharing class CarrierLoadBoardController {
                 'A load and bid must be selected.'
             );
         }
-        
+
         List<FreightTM__Bid__c> bids = [
             SELECT
             Id,
@@ -141,8 +141,6 @@ public without sharing class CarrierLoadBoardController {
             FreightTM__Load__c,
             FreightTM__Carrier__c,
             FreightTM__Rate__c,
-            Transition_Date__c,
-            Transit_Time__c,
             FreightTM__Carrier__r.Name,
             FreightTM__Carrier__r.FreightTM__Email__c,
             FreightTM__Carrier__r.Ready_for_Loads__c,
@@ -152,21 +150,21 @@ public without sharing class CarrierLoadBoardController {
             AND FreightTM__Load__c = :loadId
             LIMIT 1
         ];
-        
+
         if (bids.isEmpty()) {
             throw publicException(
                 'The selected bid does not belong to this load.'
             );
         }
-        
+
         FreightTM__Bid__c selectedBid = bids[0];
-        
+
         if (selectedBid.FreightTM__Carrier__c == null) {
             throw publicException(
                 'The selected bid does not have a carrier.'
             );
         }
-        
+
         if (
             selectedBid.FreightTM__Carrier__r == null ||
             selectedBid.FreightTM__Carrier__r.Ready_for_Loads__c != true ||
@@ -176,7 +174,7 @@ public without sharing class CarrierLoadBoardController {
                 'The selected carrier is no longer approved for loads.'
             );
         }
-        
+
         if (
             String.isBlank(
                 selectedBid.FreightTM__Carrier__r.FreightTM__Email__c
@@ -186,7 +184,7 @@ public without sharing class CarrierLoadBoardController {
                 'The selected carrier does not have an email address.'
             );
         }
-        
+
         List<FreightTM__Load__c> loads = [
             SELECT
             Id,
@@ -200,27 +198,27 @@ public without sharing class CarrierLoadBoardController {
             LIMIT 1
             FOR UPDATE
         ];
-        
+
         if (loads.isEmpty()) {
             throw publicException(
                 'The selected load could not be found.'
             );
         }
-        
+
         FreightTM__Load__c loadRecord = loads[0];
-        
+
         if (loadRecord.FreightTM__Load_Canceled__c == true) {
             throw publicException(
                 'The selected load has been canceled.'
             );
         }
-        
+
         if (loadRecord.FreightTM__Carrier_Obj__c != null) {
             throw publicException(
                 'The selected load already has a carrier assigned.'
             );
         }
-        
+
         if (
             !String.isBlank(loadRecord.FreightTM__Status__c) &&
             loadRecord.FreightTM__Status__c != OPEN_STATUS
@@ -229,7 +227,7 @@ public without sharing class CarrierLoadBoardController {
                 'The selected load is no longer open.'
             );
         }
-        
+
         /*
 * Assign the carrier selected through the Bid.
 *
@@ -242,7 +240,7 @@ public without sharing class CarrierLoadBoardController {
             selectedBid.FreightTM__Rate__c;
         loadRecord.FreightTM__Status__c =
             'Assigned';
-        
+
         try {
             update loadRecord;
         } catch (DmlException errorValue) {
@@ -250,13 +248,13 @@ public without sharing class CarrierLoadBoardController {
                 errorValue.getNumDml() > 0
                 ? errorValue.getDmlMessage(0)
                 : errorValue.getMessage();
-            
+
             throw publicException(
                 'The carrier could not be assigned: ' +
                 detail
             );
         }
-        
+
         try {
             System.enqueueJob(
                 new CarrierLoadBoardRateConJob(
@@ -271,22 +269,22 @@ public without sharing class CarrierLoadBoardController {
                 errorValue.getMessage()
             );
         }
-        
+
         AssignBidResult result =
             new AssignBidResult();
-        
+
         result.success = true;
         result.loadId = loadRecord.Id;
         result.bidId = selectedBid.Id;
         result.carrierId =
             selectedBid.FreightTM__Carrier__c;
-        
+
         result.message =
             selectedBid.FreightTM__Carrier__r.Name +
             ' was assigned to ' +
             loadRecord.Name +
             '. The Rate Confirmation email has been queued.';
-        
+
         return result;
     }
 
@@ -473,8 +471,6 @@ public without sharing class CarrierLoadBoardController {
                 FreightTM__Load__c,
                 FreightTM__Carrier__c,
                 FreightTM__Rate__c,
-                Transition_Date__c,
-                Transit_Time__c,
                 CreatedDate,
 
                 FreightTM__Carrier__r.Name,
@@ -543,11 +539,10 @@ public without sharing class CarrierLoadBoardController {
             match.rate =
                 bidRecord.FreightTM__Rate__c;
 
-            match.transitionDate =
-                bidRecord.Transition_Date__c;
-
-            match.transitTime =
-                bidRecord.Transit_Time__c;
+            // These optional Bid fields are not installed in every org.
+            // Keep the response properties available without querying missing fields.
+            match.transitionDate = null;
+            match.transitTime = null;
 
             match.submittedDate =
                 bidRecord.CreatedDate;

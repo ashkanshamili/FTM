@@ -52,8 +52,6 @@ public without sharing class CarrierLoadBoardRateConJob
                 FreightTM__Load__c,
                 FreightTM__Carrier__c,
                 FreightTM__Rate__c,
-                Transition_Date__c,
-                Transit_Time__c,
                 FreightTM__Carrier__r.Name,
                 FreightTM__Carrier__r.FreightTM__Primary_Contact__c,
                 FreightTM__Carrier__r.FreightTM__Email__c
