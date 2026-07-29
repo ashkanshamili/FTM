@@ -1,0 +1,40 @@
+.loading {
+    min-height: 8rem;
+    position: relative;
+}
+
+.status {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.status-row {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 0.75rem;
+    align-items: start;
+}
+
+.label {
+    font-weight: 600;
+}
+
+.mono {
+    font-family: monospace;
+    overflow-wrap: anywhere;
+}
+
+.error {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    background: var(--slds-g-color-error-container-1, #fef1ee);
+    color: var(--slds-g-color-error-base-30, #ba0517);
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}

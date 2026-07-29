@@ -1,0 +1,59 @@
+<template>
+    <lightning-quick-action-panel header="DAT Load Actions">
+        <template if:true={isLoading}>
+            <div class="loading">
+                <lightning-spinner alternative-text="Working with DAT" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <div class="status">
+                <div class="status-row">
+                    <span class="label">Environment</span>
+                    <span>{state.environmentLabel}</span>
+                </div>
+                <div class="status-row">
+                    <span class="label">Status</span>
+                    <span>{state.message}</span>
+                </div>
+                <template if:true={state.postId}>
+                    <div class="status-row">
+                        <span class="label">DAT Post ID</span>
+                        <span class="mono">{state.postId}</span>
+                    </div>
+                </template>
+                <template if:true={state.shipmentId}>
+                    <div class="status-row">
+                        <span class="label">Shipment ID</span>
+                        <span class="mono">{state.shipmentId}</span>
+                    </div>
+                </template>
+            </div>
+
+            <template if:true={errorMessage}>
+                <div class="error" role="alert">{errorMessage}</div>
+            </template>
+        </template>
+
+        <div slot="footer" class="actions">
+            <lightning-button label="Close" onclick={close}></lightning-button>
+            <lightning-button
+                label="Post"
+                variant="brand"
+                onclick={post}
+                disabled={postDisabled}>
+            </lightning-button>
+            <lightning-button
+                label="Update"
+                onclick={updatePosting}
+                disabled={updateDisabled}>
+            </lightning-button>
+            <lightning-button
+                label="Delete"
+                variant="destructive"
+                onclick={deletePosting}
+                disabled={deleteDisabled}>
+            </lightning-button>
+        </div>
+    </lightning-quick-action-panel>
+</template>

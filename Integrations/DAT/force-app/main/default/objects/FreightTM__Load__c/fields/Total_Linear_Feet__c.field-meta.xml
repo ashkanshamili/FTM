@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Total_Linear_Feet__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+    OR(
+        ISBLANK(FreightTM__Length__c),
+        ISBLANK(FreightTM__Width__c),
+        ISBLANK(FreightTM__Number_of_Pallets__c),
+        FreightTM__Length__c &lt;= 0,
+        FreightTM__Width__c &lt;= 0,
+        FreightTM__Number_of_Pallets__c &lt;= 0,
+        FreightTM__Width__c &gt; 96
+    ),
+    NULL,
+    CEILING(
+        FreightTM__Number_of_Pallets__c /
+        FLOOR(96 / FreightTM__Width__c)
+    )
+    * FreightTM__Length__c / 12
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Total Linear Feet</label>
+    <precision>18</precision>
+    <scale>2</scale>
+    <type>Number</type>
+</CustomField>
