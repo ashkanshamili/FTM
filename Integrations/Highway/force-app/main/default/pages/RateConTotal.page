@@ -1,0 +1,38 @@
+<apex:page sidebar="false" renderAs="pdf" applyBodyTag="false" standardController="FreightTM__Load__c">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+        <style type="text/CSS">
+            body { font-family: Arial, sans-serif; font-size: 10pt; }
+            table { border-collapse: collapse; width: 100%; }
+            td, th { border: 1px solid #000; padding: 6px; }
+            .no-border td { border: none; }
+        </style>
+    </head>
+    <h1>Total Rate Confirmation</h1>
+    <table class="no-border">
+        <tr>
+            <td><b>Load:</b> {!FreightTM__Load__c.Name}</td>
+            <td><b>Confirmation #:</b> {!FreightTM__Load__c.FreightTM__Confirmation_Number__c}</td>
+        </tr>
+        <tr>
+            <td><b>Carrier:</b> {!FreightTM__Load__c.FreightTM__Carrier_Obj__r.Name}</td>
+            <td><b>Carrier Rate:</b> ${!FreightTM__Load__c.FreightTM__Rate_to_Carrier__c}</td>
+        </tr>
+    </table>
+    <br/>
+    <table>
+        <tr><th>Stop</th><th>Location</th><th>Date / Time</th></tr>
+        <tr>
+            <td>Pickup</td>
+            <td>{!FreightTM__Load__c.FreightTM__Pickup_City__c}, {!FreightTM__Load__c.FreightTM__Pickup_State__c}</td>
+            <td>{!FreightTM__Load__c.FreightTM__Pickup_Arrival__c}</td>
+        </tr>
+        <tr>
+            <td>Delivery</td>
+            <td>{!FreightTM__Load__c.FreightTM__Delivery_City__c}, {!FreightTM__Load__c.FreightTM__Delivery_State__c}</td>
+            <td>{!FreightTM__Load__c.FreightTM__Delivery_Arrival__c}</td>
+        </tr>
+    </table>
+    <br/>
+    <p><b>Load remarks:</b> {!FreightTM__Load__c.FreightTM__Remarks__c}</p>
+</apex:page>

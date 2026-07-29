@@ -1,0 +1,46 @@
+<apex:page controller="HighwaySendTotalRateConVFController"
+           sidebar="false"
+           showHeader="true">
+    
+    <apex:form >
+        <apex:pageMessages id="msgs" />
+        
+        <apex:pageBlock title="Send Total Rate Confirmation to Highway" id="pb">
+            
+            <apex:outputPanel rendered="{!NOT(ISBLANK(message))}" id="msgPanel">
+                <div style="{!IF(success,
+                            'color: green; font-weight: bold; margin-bottom: 12px;',
+                            'color: red; font-weight: bold; margin-bottom: 12px;')}">
+                    {!message}
+                </div>
+            </apex:outputPanel>
+            
+            <apex:pageBlockSection columns="1">
+                <apex:outputLabel value="Target Email" for="targetEmail" />
+                
+                <apex:outputText id="targetEmail"
+                                 value="{!selectedTargetEmail}" />
+                
+                <apex:outputText value="Target email is required for Total Rate Confirmation. Total RC cannot be sent without targeted_emails." />
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton value="Send"
+                                    action="{!send}"
+                                    rerender="pb,msgs"
+                                    status="sendStatus" />
+                
+                <apex:commandButton value="Back to Load"
+                                    action="{!goBack}"
+                                    immediate="true" />
+            </apex:pageBlockButtons>
+            
+            <apex:actionStatus id="sendStatus">
+                <apex:facet name="start">
+                    <span style="font-weight:bold;">Sending...</span>
+                </apex:facet>
+            </apex:actionStatus>
+            
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>
